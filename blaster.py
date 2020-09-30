@@ -9,133 +9,20 @@ from typing import (
     NamedTuple,
     Optional,
     Sequence,
+    FrozenSet,
     Union,
 )
 
+
 from utils import flatten, NoValue, tfprint
-
-
-class DamType(NoValue):
-    ACID = "acid"
-    ASPHYXIATION = "asphyxiation"
-    COLD = "cold"
-    ELECTRICITY = "electricity"
-    FIRE = "fire"
-    MAGICAL = "magical"
-    POISON = "poison"
-    PSI = "psi"
-    HARM = "harm"
-    PHYSICAL = "physical"
-
-
-class SpellType(NoValue):
-    MAGE_SINGLE_1 = "mage_single_1"  # biggest, requires reagent
-    MAGE_SINGLE_2 = "mage_single_2"
-    MAGE_SINGLE_3 = "mage_single_3"
-    MAGE_SINGLE_4 = "mage_single_4"
-    MAGE_SINGLE_5 = "mage_single_5"
-    MAGE_AREA_1 = "mage_area_1"  # biggest
-    MAGE_AREA_2 = "mage_area_2"
-    MAGE_PROT_1 = "mage_prot_1"  # greater
-    MAGE_PROT_2 = "mage_prot_2"
-    CHANNELLER_SINGLE = "channeller_single"
-
-
-class Spell(NamedTuple):
-    name: str
-    blast: bool
-
-
-TYPE_SPELLS: Mapping[DamType, Mapping[SpellType, Spell]] = {
-    DamType.ACID: {
-        SpellType.MAGE_SINGLE_1: Spell("acid blast", True),
-        SpellType.MAGE_SINGLE_2: Spell("acid ray", True),
-        SpellType.MAGE_SINGLE_3: Spell("acid arrow", True),
-        SpellType.MAGE_SINGLE_4: Spell("acid wind", True),
-        SpellType.MAGE_SINGLE_5: Spell("disruption", True),
-        SpellType.MAGE_AREA_1: Spell("acid storm", True),
-        SpellType.MAGE_AREA_2: Spell("acid rain", True),
-        SpellType.MAGE_PROT_1: Spell("acid shield", False),
-        SpellType.MAGE_PROT_2: Spell("corrosion shield", False),
-    },
-    DamType.ASPHYXIATION: {
-        SpellType.MAGE_SINGLE_1: Spell("blast vacuum", True),
-        SpellType.MAGE_SINGLE_2: Spell("strangulation", True),
-        SpellType.MAGE_SINGLE_3: Spell("chaos bolt", True),
-        SpellType.MAGE_SINGLE_4: Spell("suffocation", True),
-        SpellType.MAGE_SINGLE_5: Spell("vacuumbolt", True),
-        SpellType.MAGE_AREA_1: Spell("vacuum globe", True),
-        SpellType.MAGE_AREA_2: Spell("vacuum ball", True),
-        SpellType.MAGE_PROT_1: Spell("aura of wind", False),
-        SpellType.MAGE_PROT_2: Spell("ether boundary", False),
-    },
-    DamType.COLD: {
-        SpellType.MAGE_SINGLE_1: Spell("cold ray", True),
-        SpellType.MAGE_SINGLE_2: Spell("icebolt", True),
-        SpellType.MAGE_SINGLE_3: Spell("darkfire", True),
-        SpellType.MAGE_SINGLE_4: Spell("flaming ice", True),
-        SpellType.MAGE_SINGLE_5: Spell("chill touch", True),
-        SpellType.MAGE_AREA_1: Spell("hailstorm", True),
-        SpellType.MAGE_AREA_2: Spell("cone of cold", True),
-        SpellType.MAGE_PROT_1: Spell("frost shield", False),
-        SpellType.MAGE_PROT_2: Spell("frost insulation", False),
-    },
-    DamType.ELECTRICITY: {
-        SpellType.MAGE_SINGLE_1: Spell("electrocution", True),
-        SpellType.MAGE_SINGLE_2: Spell("forked lightning", True),
-        SpellType.MAGE_SINGLE_3: Spell("blast lightning", True),
-        SpellType.MAGE_SINGLE_4: Spell("lightning bolt", True),
-        SpellType.MAGE_SINGLE_5: Spell("shocking grasp", True),
-        SpellType.MAGE_AREA_1: Spell("lightning storm", True),
-        SpellType.MAGE_AREA_2: Spell("chain lightning", True),
-        SpellType.MAGE_PROT_1: Spell("lightning shield", False),
-        SpellType.MAGE_PROT_2: Spell("energy channeling", False),
-        SpellType.CHANNELLER_SINGLE: Spell("channelbolt", True),
-    },
-    DamType.FIRE: {
-        SpellType.MAGE_SINGLE_1: Spell("lava blast", True),
-        SpellType.MAGE_SINGLE_2: Spell("meteor blast", True),
-        SpellType.MAGE_SINGLE_3: Spell("fire blast", True),
-        SpellType.MAGE_SINGLE_4: Spell("firebolt", True),
-        SpellType.MAGE_SINGLE_5: Spell("flame arrow", True),
-        SpellType.MAGE_AREA_1: Spell("lava storm", True),
-        SpellType.MAGE_AREA_2: Spell("meteor swarm", True),
-        SpellType.MAGE_PROT_1: Spell("flame shield", False),
-        SpellType.MAGE_PROT_2: Spell("heat reduction", False),
-        SpellType.CHANNELLER_SINGLE: Spell("channelburn", True),
-    },
-    DamType.MAGICAL: {
-        SpellType.MAGE_SINGLE_1: Spell("golden arrow", True),
-        SpellType.MAGE_SINGLE_2: Spell("summon greater spores", True),
-        SpellType.MAGE_SINGLE_3: Spell("levin bolt", True),
-        SpellType.MAGE_SINGLE_4: Spell("summon lesser spores", True),
-        SpellType.MAGE_SINGLE_5: Spell("magic missile", True),
-        SpellType.MAGE_AREA_1: Spell("magic eruption", True),
-        SpellType.MAGE_AREA_2: Spell("magic wave", True),
-        SpellType.MAGE_PROT_1: Spell("repulsor aura", False),
-        SpellType.MAGE_PROT_2: Spell("magic dispersion", False),
-        SpellType.CHANNELLER_SINGLE: Spell("channelball", True),
-    },
-    DamType.POISON: {
-        SpellType.MAGE_SINGLE_1: Spell("summon carnal spores", True),
-        SpellType.MAGE_SINGLE_2: Spell("power blast", True),
-        SpellType.MAGE_SINGLE_3: Spell("venom strike", True),
-        SpellType.MAGE_SINGLE_4: Spell("poison blast", True),
-        SpellType.MAGE_SINGLE_5: Spell("thorn spray", True),
-        SpellType.MAGE_AREA_1: Spell("killing cloud", True),
-        SpellType.MAGE_AREA_2: Spell("poison spray", True),
-        SpellType.MAGE_PROT_1: Spell("shield of detoxification", False),
-        SpellType.MAGE_PROT_2: Spell("toxic dilution", False),
-    },
-    DamType.PHYSICAL: {
-        SpellType.MAGE_PROT_1: Spell("armour of aether", False),
-        SpellType.MAGE_PROT_2: Spell("force absorption", False),
-    },
-}
+from spells import DamType, getSpellByName, getSpellByType, Spell, SpellType
 
 
 class OtherCategory(NoValue):
-    CHANNELLER_DRAIN = "channeller_drain"
+    BLAST_BIG = "blast_big"
+    BLAST_SMALL = "blast_small"
+    PROT = "prot"
+    UTILITY = "utility"
 
 
 Category = Union[DamType, OtherCategory]
@@ -149,22 +36,17 @@ class CategoryBind(NamedTuple):
 
 CATEGORY_BINDS: Sequence[Sequence[CategoryBind]] = [
     [
-        CategoryBind("^[1", DamType.MAGICAL, "1: magical"),
-        CategoryBind("^[2", DamType.FIRE, "2: fire"),
-        CategoryBind("^[3", DamType.ELECTRICITY, "3: elec"),
-        CategoryBind("^[4", DamType.ASPHYXIATION, "4: asphy"),
-        CategoryBind("^[5", DamType.ACID, "5: acid"),
-        CategoryBind("^[6", DamType.POISON, "6: poison"),
-        CategoryBind("^[!", OtherCategory.CHANNELLER_DRAIN, "^1: drain"),
-        CategoryBind("^[&", DamType.COLD, "^6: cold"),
+        CategoryBind("^[1", OtherCategory.BLAST_BIG, "1: blast"),
+        CategoryBind("^[2", OtherCategory.PROT, "2: prot"),
+        CategoryBind("^[3", OtherCategory.UTILITY, "3: utility"),
+        CategoryBind("^[4", OtherCategory.BLAST_SMALL, "4: blast small"),
     ],
 ]
 
 
 class State(NamedTuple):
     category: Category
-    blastTarget: Optional[str]
-    protTarget: Optional[str]
+    target: Optional[str]
 
 
 def categoryBindHelp(category: Category) -> str:
@@ -176,62 +58,94 @@ def categoryBindHelp(category: Category) -> str:
     return "\n".join(map(lambda cbs: " ".join(map(getCatStr, cbs)), CATEGORY_BINDS))
 
 
-SPELL_NUMBER = Literal["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]
+SPELL_BIND_ID = Literal["Q", "W", "E", "R", "T", "A", "S", "D", "F", "G"]
 
 
 class SpellBind(NamedTuple):
     key: str
-    spellNumber: SPELL_NUMBER
-    explanation: str
+    spellBindId: SPELL_BIND_ID
+    atTarget: bool
 
 
 SPELL_BINDS: Sequence[SpellBind] = [
-    SpellBind("^[q", "1", "Q"),
-    SpellBind("^[w", "2", "W"),
-    SpellBind("^[e", "3", "E"),
-    SpellBind("^[r", "4", "R"),
-    SpellBind("^[t", "5", "T"),
-    SpellBind("^[a", "6", "A"),
-    SpellBind("^[s", "7", "S"),
-    SpellBind("^[d", "8", "D"),
-    SpellBind("^[f", "9", "F"),
-    SpellBind("^[g", "10", "G"),
+    SpellBind("^[q", "Q", False),
+    SpellBind("^[w", "W", False),
+    SpellBind("^[e", "E", False),
+    SpellBind("^[r", "R", False),
+    SpellBind("^[t", "T", False),
+    SpellBind("^[a", "A", False),
+    SpellBind("^[s", "S", False),
+    SpellBind("^[d", "D", False),
+    SpellBind("^[f", "F", False),
+    SpellBind("^[g", "G", False),
+    SpellBind("^[Q", "Q", True),
+    SpellBind("^[W", "W", True),
+    SpellBind("^[E", "E", True),
+    SpellBind("^[R", "R", True),
+    SpellBind("^[T", "T", True),
+    SpellBind("^[A", "A", True),
+    SpellBind("^[S", "S", True),
+    SpellBind("^[D", "D", True),
+    SpellBind("^[F", "F", True),
+    SpellBind("^[G", "G", True),
 ]
 
-SPELLS_FOR_CATEGORY: Mapping[Category, Mapping[SPELL_NUMBER, Spell]] = {
-    DamType.MAGICAL: {
-        "1": TYPE_SPELLS[DamType.MAGICAL][SpellType.CHANNELLER_SINGLE],
-        "3": Spell("channelspray", True),
-        "6": TYPE_SPELLS[DamType.MAGICAL][SpellType.MAGE_PROT_1],
+SPELLS_FOR_CATEGORY: Mapping[Category, Mapping[SPELL_BIND_ID, Optional[Spell]]] = {
+    OtherCategory.BLAST_BIG: {
+        "Q": getSpellByType(DamType.ASPHYXIATION, SpellType.MAGE_SINGLE_1),
+        "W": getSpellByType(DamType.ACID, SpellType.MAGE_SINGLE_1),
+        "E": getSpellByType(DamType.POISON, SpellType.MAGE_SINGLE_1),
+        # channeller
+        "A": getSpellByType(DamType.MAGICAL, SpellType.CHANNELLER_SINGLE),
+        "S": getSpellByType(DamType.FIRE, SpellType.CHANNELLER_SINGLE),
+        "D": getSpellByType(DamType.ELECTRICITY, SpellType.CHANNELLER_SINGLE),
+        "F": getSpellByName("drain enemy"),
+        # area
+        "R": getSpellByType(DamType.ACID, SpellType.MAGE_AREA_1),
+        "T": getSpellByName("channelspray"),
     },
-    DamType.FIRE: {
-        "1": TYPE_SPELLS[DamType.FIRE][SpellType.CHANNELLER_SINGLE],
-        "3": Spell("channelspray", True),
-        "6": TYPE_SPELLS[DamType.FIRE][SpellType.MAGE_PROT_1],
+    OtherCategory.PROT: {
+        "Q": getSpellByType(DamType.ASPHYXIATION, SpellType.MAGE_PROT_1),
+        "W": getSpellByType(DamType.ACID, SpellType.MAGE_PROT_1),
+        "E": getSpellByType(DamType.POISON, SpellType.MAGE_PROT_1),
+        "R": getSpellByType(DamType.COLD, SpellType.MAGE_PROT_1),
+        "A": getSpellByType(DamType.MAGICAL, SpellType.MAGE_PROT_1),
+        "S": getSpellByType(DamType.FIRE, SpellType.MAGE_PROT_1),
+        "D": getSpellByType(DamType.ELECTRICITY, SpellType.MAGE_PROT_1),
+        "F": getSpellByType(DamType.PHYSICAL, SpellType.MAGE_PROT_1),
     },
-    DamType.ELECTRICITY: {
-        "1": TYPE_SPELLS[DamType.ELECTRICITY][SpellType.CHANNELLER_SINGLE],
-        "3": Spell("channelspray", True),
-        "6": TYPE_SPELLS[DamType.ELECTRICITY][SpellType.MAGE_PROT_1],
+    OtherCategory.BLAST_SMALL: {
+        "Q": getSpellByType(DamType.ASPHYXIATION, SpellType.MAGE_SINGLE_5),
+        "W": getSpellByType(DamType.ACID, SpellType.MAGE_SINGLE_5),
+        "E": getSpellByType(DamType.POISON, SpellType.MAGE_SINGLE_5),
+        "A": getSpellByType(DamType.MAGICAL, SpellType.MAGE_SINGLE_5),
+        "S": getSpellByType(DamType.FIRE, SpellType.MAGE_SINGLE_5),
+        "D": getSpellByType(DamType.ELECTRICITY, SpellType.MAGE_SINGLE_5),
+        "R": getSpellByType(DamType.COLD, SpellType.MAGE_SINGLE_5),
     },
-    DamType.ASPHYXIATION: {
-        "1": TYPE_SPELLS[DamType.ASPHYXIATION][SpellType.MAGE_SINGLE_1],
-        "2": TYPE_SPELLS[DamType.ASPHYXIATION][SpellType.MAGE_SINGLE_2],
-        "3": TYPE_SPELLS[DamType.ASPHYXIATION][SpellType.MAGE_AREA_1],
-        "6": TYPE_SPELLS[DamType.ASPHYXIATION][SpellType.MAGE_PROT_1],
+    OtherCategory.UTILITY: {
+        "A": getSpellByName("displacement"),
+        "S": getSpellByName("blurred image"),
+        "D": getSpellByName("shield of protection"),
     },
-    DamType.ACID: {
-        "1": TYPE_SPELLS[DamType.ACID][SpellType.MAGE_SINGLE_1],
-        "2": TYPE_SPELLS[DamType.ACID][SpellType.MAGE_SINGLE_2],
-        "3": TYPE_SPELLS[DamType.ACID][SpellType.MAGE_AREA_1],
-        "6": TYPE_SPELLS[DamType.ACID][SpellType.MAGE_PROT_1],
-    },
-    DamType.POISON: {
-        "1": TYPE_SPELLS[DamType.POISON][SpellType.MAGE_SINGLE_1],
-        "2": TYPE_SPELLS[DamType.POISON][SpellType.MAGE_SINGLE_2],
-        "3": TYPE_SPELLS[DamType.POISON][SpellType.MAGE_AREA_1],
-        "6": TYPE_SPELLS[DamType.POISON][SpellType.MAGE_PROT_1],
-    },
+}
+
+DAMTYPE_STR: Mapping[Optional[DamType], str] = {
+    DamType.ACID: "@{Cgreen}" + "{:4}".format(DamType.ACID.value[:4]) + "@{n}",
+    DamType.ASPHYXIATION: "@{BCmagenta}"
+    + "{:4}".format(DamType.ASPHYXIATION.value[:4])
+    + "@{n}",
+    DamType.COLD: "@{BCcyan}" + "{:4}".format(DamType.COLD.value[:4]) + "@{n}",
+    DamType.ELECTRICITY: "@{BCblue}"
+    + "{:4}".format(DamType.ELECTRICITY.value[:4])
+    + "@{n}",
+    DamType.FIRE: "@{Cred}" + "{:4}".format(DamType.FIRE.value[:4]) + "@{n}",
+    DamType.MAGICAL: "@{BCyellow}" + "{:4}".format(DamType.MAGICAL.value[:4]) + "@{n}",
+    DamType.POISON: "@{Cgreen}" + "{:4}".format(DamType.POISON.value[:4]) + "@{n}",
+    DamType.PSI: "@{BCblue}" + "{:4}".format(DamType.PSI.value[:4]) + "@{n}",
+    DamType.HARM: "@{BCyellow}" + "{:4}".format(DamType.HARM.value[:4]) + "@{n}",
+    DamType.PHYSICAL: "@{Cyellow}" + "{:4}".format(DamType.PHYSICAL.value[:4]) + "@{n}",
+    None: "    ",
 }
 
 
@@ -241,13 +155,56 @@ def categorySpellsHelp(category: Category) -> str:
 
     spells = SPELLS_FOR_CATEGORY[category]
 
+    getSpellName: Callable[[Optional[Spell]], Optional[str]] = (
+        lambda spell: cast(Spell, spell).name if spell != None else None
+    )
+
+    getSpellDamType: Callable[[Optional[Spell]], Optional[str]] = (
+        lambda spell: DAMTYPE_STR[cast(Spell, spell).damType] if spell != None else None
+    )
+
     getSpellStr: Callable[[SpellBind], Optional[str]] = (
-        lambda sb: "{0}: {1}".format(sb.explanation, spells[sb.spellNumber].name)
-        if sb.spellNumber in spells
+        lambda sb: "{0}: {1:4} {2}".format(
+            sb.spellBindId,
+            getSpellDamType(spells[sb.spellBindId]),
+            getSpellName(spells[sb.spellBindId]),
+        )
+        if sb.spellBindId in spells and spells[sb.spellBindId] != None
         else None
     )
 
-    return "\n".join([s for s in map(getSpellStr, SPELL_BINDS) if s is not None])
+    return "\n".join(
+        [
+            s
+            for s in map(
+                getSpellStr, filter(lambda spell: spell.atTarget == False, SPELL_BINDS)
+            )
+            if s is not None
+        ]
+    )
+
+
+class Resist(NamedTuple):
+    regex: str
+    percentage: int
+
+
+RESISTS: FrozenSet[Resist] = frozenset(
+    [
+        Resist("screams in pain\.", 0),
+        Resist("writhes in agony\.", 20),
+        Resist("shudders from the force of the attack\.", 40),
+        Resist("grunts from the pain\.", 60),
+        Resist("winces a little from the pain\.", 80),
+        Resist("shrugs off the attack\.", 100),
+    ]
+)
+
+
+def partyReportCast(spell: Spell):
+    if spell.spellType == SpellType.MAGE_PROT_1:
+        return True
+    return False
 
 
 def changeCategory(category_raw: str):
@@ -261,15 +218,71 @@ def changeCategory(category_raw: str):
     tfprint(categorySpellsHelp(selected))
 
 
-def castSpell(spellNumber: SPELL_NUMBER):
+def castString(spell: Spell, atTarget: bool, target: Optional[str]):
+    # spell can't have target, cast always without
+    if spell.withTarget == False:
+        return spell.name
+
+    # spell must have target, cast with it
+    if spell.withoutTarget == False:
+        return "{0} at {1}".format(spell.name, target)
+
+    # spell can be cast with or without target, do according to pressed key
+    if atTarget == True:
+        return "{0} at {1}".format(spell.name, target)
+    else:
+        return spell.name
+
+
+def castSpellWithTarget(spellBindId: SPELL_BIND_ID):
+    castSpell(spellBindId, True)
+
+
+def castSpellWithoutTarget(spellBindId: SPELL_BIND_ID):
+    castSpell(spellBindId, False)
+
+
+def castSpell(spellBindId: SPELL_BIND_ID, atTarget: bool):
     global state
     if (
         state.category in SPELLS_FOR_CATEGORY
-        and spellNumber in SPELLS_FOR_CATEGORY[state.category]
+        and spellBindId in SPELLS_FOR_CATEGORY[state.category]
     ):
-        spell = SPELLS_FOR_CATEGORY[state.category][spellNumber]
-        eval("@cast {0}".format(spell.name))
-        tfprint("casting {0}".format(spell.name))
+        spell = SPELLS_FOR_CATEGORY[state.category][spellBindId]
+
+        if spell != None:
+            spell = cast(Spell, spell)
+            castStr = castString(spell, atTarget, state.target)
+
+            eval("@cast {0}".format(castStr))
+            tfprint("casting {0}".format(castStr))
+            if partyReportCast(spell):
+                eval("@quote 'cast info' party report")
+
+
+def setTarget(target: str):
+    global state
+    state = state._replace(target=target[:-1].lower())
+    tfprint("target {0}".format(state.target))
+
+
+SETUP_COMMANDS: Sequence[str] = [
+    "/def -i -q -b'^[z' = @cast stop",
+    "/def -i -q -b'^[-' = @party prots",
+    "/def -i -q -b'^[ ' = @ps",
+    "/def -i -q -b'^[ ' = @ps",
+    "/def key_f2 = @ch int",
+    "/def key_f2 = @ch wis",
+    "/def key_f2 = @ch spr",
+    '/def -i -F -msimple -t"You start chanting." spell_start = '
+    + "/echo -p @{Crgb450}»@{n} @{Cbgrgb110}@{BCrgb151} ---- CAST STARTED ---- @{n}",
+    '/def -i -F -msimple -agGL -t"∴cast_cancelled" bcproxy_gag_cast_cancelled = '
+    + "/echo -p @{Crgb450}»@{n} @{Cbgrgb110}@{BCrgb511} ---- CAST STOPPED ---- @{n}",
+    '/def -i -F -msimple -ag -t"You skillfully cast the spell with haste." gag_haste',
+    '/def -i -F -msimple -ag -t"You skillfully cast the spell with greater haste." gag_ghaste',
+    '/def -i -F -mglob -t"You are now targetting *" set_target = /python_call blaster.setTarget \%-4',
+    '/def -i -F -mglob -t"You are now target-healing *" set_target_heal = /python_call blaster.setTarget \%-4',
+]
 
 
 def setup():
@@ -279,14 +292,26 @@ def setup():
                 key, category.value
             )
         )
-    for key, category, explanation in SPELL_BINDS:
-        eval(
-            "/def -i -q -b'{0}' = /python_call blaster.castSpell {1}".format(
-                key, category
+
+    for key, spellBindId, atTarget in SPELL_BINDS:
+        if atTarget:
+            eval(
+                "/def -i -q -b'{0}' = /python_call blaster.castSpellWithTarget {1}".format(
+                    key, spellBindId
+                )
             )
-        )
+        else:
+            eval(
+                "/def -i -q -b'{0}' = /python_call blaster.castSpellWithoutTarget {1}".format(
+                    key, spellBindId
+                )
+            )
+
+    for cmd in SETUP_COMMANDS:
+        eval(cmd)
+
     tfprint("Loaded blaster.py")
 
 
 setup()
-state = State(DamType.MAGICAL, None, None)
+state = State(DamType.MAGICAL, None)
