@@ -1,6 +1,7 @@
 from enum import Enum
 from itertools import chain
 from tf import eval  # type: ignore
+from typing import Optional
 
 
 def flatten(xs):
@@ -15,3 +16,10 @@ def tfprint(s: str):
 class NoValue(Enum):
     def __repr__(self):
         return "<%s.%s>" % (self.__class__.__name__, self.name)
+
+
+def strtoi(s: str) -> Optional[int]:
+    try:
+        return int(s)
+    except ValueError as e:
+        return None

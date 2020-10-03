@@ -268,20 +268,22 @@ def setTarget(target: str):
 
 SETUP_COMMANDS: Sequence[str] = [
     "/def -i -q -b'^[z' = @cast stop",
-    "/def -i -q -b'^[-' = @party prots",
-    "/def -i -q -b'^[ ' = @ps",
-    "/def -i -q -b'^[ ' = @ps",
+    "/def -i -q -b'^[x' = @party prots",
+    "/def -i -q -b'^[c' = @show effects",
+    "/def -i -q -b'^[ ' = @ps;check supply",
     "/def key_f2 = @ch int",
-    "/def key_f2 = @ch wis",
-    "/def key_f2 = @ch spr",
+    "/def key_f3 = @ch wis",
+    "/def key_f4 = @ch spr",
     '/def -i -F -msimple -t"You start chanting." spell_start = '
     + "/echo -p @{Crgb450}»@{n} @{Cbgrgb110}@{BCrgb151} ---- CAST STARTED ---- @{n}",
     '/def -i -F -msimple -agGL -t"∴cast_cancelled" bcproxy_gag_cast_cancelled = '
     + "/echo -p @{Crgb450}»@{n} @{Cbgrgb110}@{BCrgb511} ---- CAST STOPPED ---- @{n}",
     '/def -i -F -msimple -ag -t"You skillfully cast the spell with haste." gag_haste',
     '/def -i -F -msimple -ag -t"You skillfully cast the spell with greater haste." gag_ghaste',
-    '/def -i -F -mglob -t"You are now targetting *" set_target = /python_call blaster.setTarget \%-4',
-    '/def -i -F -mglob -t"You are now target-healing *" set_target_heal = /python_call blaster.setTarget \%-4',
+    '/def -i -F -mglob -t"You are now targetting *" set_target = '
+    + "/python_call blaster.setTarget \%-4",
+    '/def -i -F -mglob -t"You are now target-healing *" set_target_heal = '
+    + "/python_call blaster.setTarget \%-4",
 ]
 
 

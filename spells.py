@@ -1,5 +1,4 @@
 from enum import Enum
-from itertools import groupby
 from typing import FrozenSet, Mapping, NamedTuple, Optional, Sequence
 
 from utils import NoValue, tfprint
