@@ -1,7 +1,9 @@
 from enum import Enum
 from itertools import chain
 from tf import eval  # type: ignore
-from typing import Optional
+from typing import cast, Optional, Sequence, TypeVar
+
+T = TypeVar("T")
 
 
 def flatten(xs):
@@ -23,3 +25,7 @@ def strtoi(s: str) -> Optional[int]:
         return int(s)
     except ValueError as e:
         return None
+
+
+def filterOutNones(xs: Sequence[Optional[T]]) -> Sequence[T]:
+    return cast(Sequence[T], filter(lambda x: x is not None, xs))

@@ -15,6 +15,27 @@ class DamType(NoValue):
     PSI = "psi"
     HARM = "harm"
     PHYSICAL = "physical"
+    HEAL = "heal"
+
+
+DAMTYPE_STR: Mapping[Optional[DamType], str] = {
+    DamType.ACID: "@{Cgreen}" + "{:4}".format(DamType.ACID.value[:4]) + "@{n}",
+    DamType.ASPHYXIATION: "@{BCmagenta}"
+    + "{:4}".format(DamType.ASPHYXIATION.value[:4])
+    + "@{n}",
+    DamType.COLD: "@{BCcyan}" + "{:4}".format(DamType.COLD.value[:4]) + "@{n}",
+    DamType.ELECTRICITY: "@{BCblue}"
+    + "{:4}".format(DamType.ELECTRICITY.value[:4])
+    + "@{n}",
+    DamType.FIRE: "@{Cred}" + "{:4}".format(DamType.FIRE.value[:4]) + "@{n}",
+    DamType.MAGICAL: "@{BCyellow}" + "{:4}".format(DamType.MAGICAL.value[:4]) + "@{n}",
+    DamType.POISON: "@{Cgreen}" + "{:4}".format(DamType.POISON.value[:4]) + "@{n}",
+    DamType.PSI: "@{BCblue}" + "{:4}".format(DamType.PSI.value[:4]) + "@{n}",
+    DamType.HARM: "@{BCyellow}" + "{:4}".format(DamType.HARM.value[:4]) + "@{n}",
+    DamType.PHYSICAL: "@{Cyellow}" + "{:4}".format(DamType.PHYSICAL.value[:4]) + "@{n}",
+    DamType.HEAL: "@{BCwhite}" + "{:4}".format(DamType.HEAL.value[:4]) + "@{n}",
+    None: "    ",
+}
 
 
 class SpellType(NoValue):
@@ -257,6 +278,80 @@ SPELLS: FrozenSet[Spell] = frozenset(
         Spell("blurred image", None, None, "", True, False),
         Spell("shield of protection", None, None, "", True, False),
         Spell("drain enemy", None, None, "", True, True),
+        Spell("dispel magical protection", None, None, "", True, False),
+        Spell("resist dispel", None, None, "", True, False),
+        # tarmalen
+        Spell(
+            "cure light wounds", DamType.HEAL, None, "judicandus mercuree", True, False
+        ),
+        Spell(
+            "cure serious wounds", DamType.HEAL, None, "judicandus ignius", True, False
+        ),
+        Spell(
+            "cure critical wounds",
+            DamType.HEAL,
+            None,
+            "judicandus mangenic",
+            True,
+            False,
+        ),
+        Spell("minor heal", DamType.HEAL, None, "judicandus pzarcumus", True, False),
+        Spell("major heal", DamType.HEAL, None, "judicandus pafzarmus", True, False),
+        Spell("true heal", DamType.HEAL, None, "judicandus zapracus", True, False),
+        Spell("deaths door", DamType.HEAL, None, "mumbo jumbo", True, False),
+        Spell("runic heal", DamType.HEAL, None, "!* *", True, False),
+        Spell("remove poison", DamType.HEAL, None, "judicandus saugaiii", True, False),
+        Spell("cure player", DamType.HEAL, None, "freudemas egoid", True, False),
+        Spell("restore", DamType.HEAL, None, "Siwa on selvaa saastoa.", True, False),
+        Spell(
+            "natural renewal",
+            DamType.HEAL,
+            None,
+            "Naturallis Judicandus Imellys",
+            True,
+            False,
+        ),
+        Spell("heal body", DamType.HEAL, None, "ZAP ZAP ZAP!", True, False),
+        Spell(
+            "minor party heal",
+            DamType.HEAL,
+            None,
+            "judicandus puorgo ignius",
+            False,
+            True,
+        ),
+        Spell(
+            "major party heal",
+            DamType.HEAL,
+            None,
+            "judicandus puorgo mangenic",
+            False,
+            True,
+        ),
+        Spell(
+            "true party heal",
+            DamType.HEAL,
+            None,
+            "judicandus eurto mangenic",
+            False,
+            True,
+        ),
+        Spell(
+            "unpain",
+            None,
+            None,
+            "harnaxan temnahecne",
+            True,
+            False,
+        ),
+        Spell(
+            "unstun",
+            None,
+            None,
+            "Paxus",
+            True,
+            False,
+        ),
     ]
 )
 
@@ -273,3 +368,20 @@ def getSpellByName(name: str) -> Optional[Spell]:
         if spell.name == name:
             return spell
     return None
+
+
+class Resist(NamedTuple):
+    regex: str
+    percentage: int
+
+
+RESISTS: FrozenSet[Resist] = frozenset(
+    [
+        Resist("screams in pain\.", 0),
+        Resist("writhes in agony\.", 20),
+        Resist("shudders from the force of the attack\.", 40),
+        Resist("grunts from the pain\.", 60),
+        Resist("winces a little from the pain\.", 80),
+        Resist("shrugs off the attack\.", 100),
+    ]
+)
