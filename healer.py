@@ -14,19 +14,20 @@ from typing import (
 )
 
 
-from caster import (
+from caster import setup as setupCaster
+from castertypes import (
     Category,
     CategoryBind,
     CategoryBinds,
     PartyReportSpells,
     PartyReportSpellTypes,
-    setup as setupCaster,
     SpellBind,
     SpellBinds,
     SpellsForCategory,
 )
 from spells import DamType, getSpellByName, getSpellByType, Spell, SpellType
-from utils import filterOutNones, flatten, NoValue, tfprint
+from tfutils import tfprint
+from utils import filterOutNones, flatten, NoValue
 
 CATEGORY_BINDS: CategoryBinds = [
     [

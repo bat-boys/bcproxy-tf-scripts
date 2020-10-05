@@ -1,3 +1,6 @@
+import dill  # type: ignore
+from multiprocessing.connection import Client
+from os import getuid
 from tf import eval as tfeval  # type: ignore
 from typing import (
     Callable,
@@ -11,101 +14,30 @@ from typing import (
     Union,
 )
 
+from castertypes import (
+    Category,
+    CategoryBind,
+    CategoryBinds,
+    SPELL_BIND_ID,
+    PartyReportSpellTypes,
+    PartyReportSpells,
+    SpellBinds,
+    SpellsForCategory,
+    State,
+)
 from spells import (
     DamType,
-    DAMTYPE_STR,
     getSpellByName,
     getSpellByType,
     Spell,
     SpellType,
 )
-from utils import flatten, NoValue, tfprint
+from tfutils import tfprint
+from utils import flatten, NoValue
 
 
-class Category(NoValue):
-    BLAST_BIG = "blast_big"
-    BLAST_SMALL = "blast_small"
-    HEAL = "heal"
-    PROT = "prot"
-    UTILITY = "utility"
-
-
-class CategoryBind(NamedTuple):
-    key: str
-    category: Category
-    explanation: str
-
-
-SPELL_BIND_ID = Literal["Q", "W", "E", "R", "T", "A", "S", "D", "F", "G"]
-
-
-class SpellBind(NamedTuple):
-    key: str
-    spellBindId: SPELL_BIND_ID
-    atTarget: bool
-
-
-CategoryBinds = Sequence[Sequence[CategoryBind]]
-SpellBinds = Sequence[SpellBind]
-PartyReportSpellTypes = FrozenSet[SpellType]
-PartyReportSpells = FrozenSet[Spell]
-SpellsForCategory = Mapping[Category, Mapping[SPELL_BIND_ID, Optional[Spell]]]
-
-
-class State(NamedTuple):
-    category: Category
-    target: Optional[str]
-    categoryBinds: CategoryBinds
-    spellsForCategory: SpellsForCategory
-    spellBinds: SpellBinds
-    partyReportSpells: PartyReportSpells
-    partyReportSpellTypes: PartyReportSpellTypes
-
-
-def categoryBindHelp(category: Category, categoryBinds: CategoryBinds) -> str:
-    getCatStr: Callable[[CategoryBind], str] = (
-        lambda cb: "@{Crgb550}" + cb.explanation + "@{n}"
-        if cb.category == category
-        else cb.explanation
-    )
-    return "\n".join(map(lambda cbs: " ".join(map(getCatStr, cbs)), categoryBinds))
-
-
-def categorySpellsHelp(
-    category: Category, spellsForCategory: SpellsForCategory, spellBinds: SpellBinds
-) -> str:
-    if category not in spellsForCategory:
-        return "no spells"
-
-    spells = spellsForCategory[category]
-
-    getSpellName: Callable[[Optional[Spell]], Optional[str]] = (
-        lambda spell: cast(Spell, spell).name if spell != None else None
-    )
-
-    getSpellDamType: Callable[[Optional[Spell]], Optional[str]] = (
-        lambda spell: DAMTYPE_STR[cast(Spell, spell).damType] if spell != None else None
-    )
-
-    getSpellStr: Callable[[SpellBind], Optional[str]] = (
-        lambda sb: "{0}: {1:4} {2}".format(
-            sb.spellBindId,
-            getSpellDamType(spells[sb.spellBindId]),
-            getSpellName(spells[sb.spellBindId]),
-        )
-        if sb.spellBindId in spells and spells[sb.spellBindId] != None
-        else None
-    )
-
-    return "\n".join(
-        [
-            s
-            for s in map(
-                getSpellStr, filter(lambda spell: spell.atTarget == False, spellBinds)
-            )
-            if s is not None
-        ]
-    )
+SOCKET_FILE = "/var/run/user/{0}/bcproxy-tf-scripts-caster".format(getuid())
+CONN = Client(SOCKET_FILE, "AF_UNIX")
 
 
 def changeCategory(category_raw: str):
@@ -113,10 +45,7 @@ def changeCategory(category_raw: str):
     cat = category_raw.upper()
     category = Category[cat]
     state = state._replace(category=category)
-    tfprint(categoryBindHelp(state.category, state.categoryBinds))
-    tfprint(
-        categorySpellsHelp(state.category, state.spellsForCategory, state.spellBinds)
-    )
+    CONN.send_bytes(dill.dumps(state))
 
 
 def castString(spell: Spell, atTarget: bool, target: Optional[str]):
@@ -154,9 +83,10 @@ def castSpell(spellBindId: SPELL_BIND_ID, atTarget: bool):
         if spell != None:
             spell = cast(Spell, spell)
             castStr = castString(spell, atTarget, state.target)
+            state = state._replace(currentSpell=castStr)
 
             tfeval("@cast {0}".format(castStr))
-            tfprint("casting {0}".format(castStr))
+
             if partyReportCast(
                 spell, state.partyReportSpellTypes, state.partyReportSpells
             ):
@@ -175,7 +105,19 @@ def partyReportCast(
     return spell.spellType in spellTypes or spell in spells
 
 
-state = State(Category.BLAST_BIG, None, [], {}, [], frozenset(), frozenset())
+def castStart(args):
+    global state
+    cur: str = state.currentSpell if state.currentSpell != None else ""
+    tfprint("@{Cbgrgb110}@{BCrgb151} ---- CAST STARTED " + cur + " ---- @{n}")
+
+
+def castStop(args):
+    global state
+    state = state._replace(currentSpell=None)
+    tfprint("@{Cbgrgb110}@{BCrgb511} ---- CAST STOPPED ---- @{n}")
+
+
+state = State(Category.BLAST_BIG, None, [], {}, [], frozenset(), frozenset(), None)
 
 
 def setup(
@@ -194,10 +136,11 @@ def setup(
         partyReportSpellTypes=partyReportSpellTypes,
     )
     cmds: Sequence[str] = [
-        "/def -i -F -msimple -t`You start chanting.` spell_start = "
-        + "/echo -p @{Crgb450}»@{n} @{Cbgrgb110}@{BCrgb151} ---- CAST STARTED ---- @{n}",
+        "/def -i -F -msimple -ag -t`You start chanting.` spell_start = "
+        + "/python_call caster.castStart",
         "/def -i -F -msimple -agGL -t`∴cast_cancelled` bcproxy_gag_cast_cancelled = "
-        + "/echo -p @{Crgb450}»@{n} @{Cbgrgb110}@{BCrgb511} ---- CAST STOPPED ---- @{n}",
+        + "/python_call caster.castStop",
+        "/def -i -F -msimple -ag -t`You are done with the chant.` gag_spell_done",
         "/def -i -F -msimple -ag -t`You skillfully cast the spell with haste.` gag_haste",
         "/def -i -F -msimple -ag -t`You skillfully cast the spell with greater haste.` gag_ghaste",
         "/def -i -F -mglob -t`You are now targetting *` set_target = "

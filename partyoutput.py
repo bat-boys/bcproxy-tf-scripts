@@ -4,14 +4,9 @@ from os import getuid
 from typing import cast, NamedTuple, Optional, Tuple
 
 from partytypes import Member, Place, State
+from utils import Color, colorize
 
 SOCKET_FILE = "/var/run/user/{0}/bcproxy-tf-scripts-party".format(getuid())
-
-
-class Color(NamedTuple):
-    r: int
-    g: int
-    b: int
 
 
 RED = Color(0xFF, 0, 0)
@@ -19,14 +14,6 @@ GREEN = Color(0, 0xFF, 0)
 YELLOW = Color(0xFF, 0xFF, 0)
 WHITE = Color(0xFF, 0xFF, 0xFF)
 OUT_OF_FORMATION_COLOR = Color(204, 153, 255)
-
-
-def colorize(s: str, color: Optional[Color]) -> str:
-    if color != None:
-        color = cast(Color, color)
-        return "\033[38;2;{0};{1};{2}m{3}\033[0m".format(color.r, color.g, color.b, s)
-    else:
-        return s
 
 
 def draw(s):

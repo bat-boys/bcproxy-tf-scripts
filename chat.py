@@ -2,7 +2,7 @@ from multiprocessing.connection import Client
 from os import getuid
 from tf import eval  # type: ignore
 
-from utils import tfprint
+from tfutils import tfprint
 
 SOCKET_FILE = "/var/run/user/{0}/bcproxy-tf-scripts-chat".format(getuid())
 CONN = Client(SOCKET_FILE, "AF_UNIX")

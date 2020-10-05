@@ -1,13 +1,14 @@
+import dill  # type: ignore
 from itertools import groupby
 from multiprocessing.connection import Client
 from os import getuid
-import dill  # type: ignore
 from time import time
 from tf import eval  # type: ignore
 from typing import cast, FrozenSet, Mapping, NamedTuple, Optional, Sequence, Set
 
 from partytypes import Member, Place, State
-from utils import NoValue, strtoi, tfprint
+from tfutils import tfprint
+from utils import NoValue, strtoi
 
 SOCKET_FILE = "/var/run/user/{0}/bcproxy-tf-scripts-party".format(getuid())
 CONN = Client(SOCKET_FILE, "AF_UNIX")
@@ -133,6 +134,21 @@ UNKNOWN_PLACES: Sequence[Place] = [
     Place(4, 3),
 ]
 
+#: bcproxy
+VALID_PLACES: FrozenSet[Place] = frozenset(
+    [
+        Place(1, 1),
+        Place(1, 2),
+        Place(1, 3),
+        Place(2, 1),
+        Place(2, 2),
+        Place(2, 3),
+        Place(3, 1),
+        Place(3, 2),
+        Place(3, 3),
+    ]
+)
+
 
 def calculatePlaces():
     global state
@@ -142,7 +158,7 @@ def calculatePlaces():
 
     for member in state.members:
         # unknown place
-        if member.place == None:
+        if member.place == None or member.place not in VALID_PLACES:
             noPlace.add(member)
             continue
 
@@ -159,7 +175,7 @@ def calculatePlaces():
             noPlace.add(member)
 
     # check if members with unknown place can be left to their previous place
-    for member in noPlace:
+    for member in noPlace.copy():
         if member.name in state.previousPlaces:
             prevPlace = state.previousPlaces[member.name]
             if prevPlace not in places:
