@@ -732,20 +732,3 @@ def getSpellByName(name: str) -> Optional[Spell]:
         if spell.name == name:
             return spell
     return None
-
-
-class Resist(NamedTuple):
-    regex: str
-    percentage: int
-
-
-RESISTS: FrozenSet[Resist] = frozenset(
-    [
-        Resist("screams in pain\.", 0),
-        Resist("writhes in agony\.", 20),
-        Resist("shudders from the force of the attack\.", 40),
-        Resist("grunts from the pain\.", 60),
-        Resist("winces a little from the pain\.", 80),
-        Resist("shrugs off the attack\.", 100),
-    ]
-)
