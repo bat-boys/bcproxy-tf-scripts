@@ -87,6 +87,7 @@ PARTY_REPORT_SPELLS: PartyReportSpells = frozenset(
 
 def setup():
     cmds: Sequence[str] = [
+        "/def t = /python_call party.changeTargetName \%1",
         "/def -i -q -b'^[z' = @cast stop",
         "/def -i -q -b'^[x' = @party prots",
         "/def -i -q -b'^[c' = @show effects",
