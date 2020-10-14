@@ -94,6 +94,10 @@ SPELLS_FOR_CATEGORY: SpellsForCategory = {
         "S": getSpellByName("blurred image"),
         "D": getSpellByName("shield of protection"),
     },
+    Category.UTILITY: {
+        "A": getSpellByName("shelter"),
+        "S": getSpellByName("neutralize field"),
+    },
     Category.BLAST_SMALL: {
         "Q": getSpellByType(DamType.ASPHYXIATION, SpellType.MAGE_SINGLE_5),
         "W": getSpellByType(DamType.ACID, SpellType.MAGE_SINGLE_5),
@@ -115,10 +119,6 @@ PARTY_REPORT_SPELLS: PartyReportSpells = frozenset(
     )
 )
 
-# You pull out a handful of olivine powder which bursts into a zillion technicolour sparkles!
-# You watch with self-pride as your acid blast hits Poltergeist.
-# Poltergeist screams in pain.
-
 
 def setup():
     cmds: Sequence[str] = [
@@ -128,15 +128,15 @@ def setup():
         "/def -i -q -b'^[c' = @show effects",
         "/def -i -q -b'^[ ' = @ps;check supply",
         "/def -i -q -b'^[v' = /python_call resists.reportLast",
-        "/def key_f2 = @ch int",
-        "/def key_f3 = @ch wis",
-        "/def key_f4 = @ch spr",
-        "/def -i -F -msimple -ag -t`Power flows from your staff to the spell.` gag_staff_cheapen",
-        "/def -i -F -msimple -ag -t`Your fine choice of components lowers the effort of the spell.` gag_power_regs",
-        "/def -i -F -msimple -ag -t`You surreptitiously conceal your spell casting.` gag_conceal",
-        "/def -i -F -mglob -ag -t`You pull out * which bursts into a zillion technicolour sparkles!` gag_acid",
+        "/def key_f2 = @int",
+        "/def key_f3 = @wis",
+        "/def key_f4 = @spr",
         "/def -i -F -msimple -ag -t`You feel your staff touching your mind.` gag_staff_ceremony",
-        "/def -i -F -msimple -ag -t`Your knowledge in elemental powers helps you to save the reagent for further use.` gag_reagent_save",
+        "/def -i -F -msimple -ag -t`You surreptitiously conceal your spell casting.` gag_conceal",
+        "/def -i -F -msimple -ag -t`spec_spell: Power flows from your staff to the spell.` gag_staff_cheapen",
+        "/def -i -F -msimple -ag -t`spec_spell: Your fine choice of components lowers the effort of the spell.` gag_power_regs",
+        "/def -i -F -mglob -ag -t`spec_spell: You pull out * which bursts into a zillion technicolour sparkles!` gag_acid",
+        "/def -i -F -msimple -ag -t`spec_spell: Your knowledge in elemental powers helps you to save the reagent for further use.` gag_reagent_save",
     ]
 
     for cmd in cmds:
