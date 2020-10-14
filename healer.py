@@ -1,4 +1,3 @@
-from enum import Enum
 from termcolor import colored
 from tf import eval as tfeval  # type: ignore
 from typing import (
@@ -27,7 +26,7 @@ from castertypes import (
 )
 from spells import DamType, getSpellByName, getSpellByType, Spell, SpellType
 from tfutils import tfprint
-from utils import filterOutNones, flatten, NoValue
+from utils import filterOutNones, flatten
 
 CATEGORY_BINDS: CategoryBinds = [
     [

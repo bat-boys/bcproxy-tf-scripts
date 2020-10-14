@@ -1,4 +1,3 @@
-from enum import Enum
 from typing import FrozenSet, Mapping, NamedTuple, Optional, Sequence
 
 from utils import Color, NoValue
