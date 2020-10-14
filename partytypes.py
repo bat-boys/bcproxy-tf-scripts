@@ -1,9 +1,15 @@
 from typing import FrozenSet, Mapping, NamedTuple, Optional
+from utils import NoValue
 
 
 class Place(NamedTuple):
     x: int
     y: int
+
+
+class MemberDataSource(NoValue):
+    PSS = "pss"
+    BCPROXY = "bcproxy"
 
 
 class Member(NamedTuple):
@@ -29,6 +35,7 @@ class Member(NamedTuple):
     unconscious: int
     ambushed: Optional[bool]
     updatedAt: float
+    source: MemberDataSource
 
 
 class State(NamedTuple):
@@ -36,3 +43,4 @@ class State(NamedTuple):
     places: Mapping[Place, Member]
     previousPlaces: Mapping[str, Place]  # str is member.name
     target: Optional[str]
+    pssHasMinions: bool

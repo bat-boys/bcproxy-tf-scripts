@@ -116,9 +116,9 @@ def lines(state: State, place: Place) -> Tuple[str, str]:
         ),
         "{0} {1: >3} {2: >4}/{3: >4} {4}".format(
             memberState,
-            member.ep,
-            member.sp,
-            member.maxsp,
+            member.ep if member.ep is not None else "?",
+            member.sp if member.sp is not None else "?",
+            member.maxsp if member.maxsp is not None else "?",
             memberIsTarget,
         ),
     )
