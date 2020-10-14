@@ -14,8 +14,12 @@ def trigger(msg: str):
 
 def setup():
     CONN.send("testing connection")
-    eval("/def -mglob -q -t'chan_party: *' chat_party = /python_call chat.trigger \%-1")
-    eval("/def -mglob -q -t'chan_tell: *' chat_tell = /python_call chat.trigger \%-1")
+    eval(
+        "/def -mglob -q -p10 -t'chan_party: *' chat_party = /python_call chat.trigger \%-1"
+    )
+    eval(
+        "/def -mglob -q -p10 -t'chan_tell: *' chat_tell = /python_call chat.trigger \%-1"
+    )
     tfprint("Loaded chat.py")
 
 

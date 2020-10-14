@@ -138,7 +138,7 @@ def setup(
     cmds: Sequence[str] = [
         "/def -i -F -msimple -ag -t`You start chanting.` spell_start = "
         + "/python_call caster.castStart",
-        "/def -i -F -msimple -agGL -t`∴cast_cancelled` bcproxy_gag_cast_cancelled = "
+        "/def -i -F -msimple -agGL -t`∴cast_cancelled` cast_cancelled = "
         + "/python_call caster.castStop",
         "/def -i -F -msimple -ag -t`You are done with the chant.` gag_spell_done",
         "/def -i -F -msimple -ag -t`You skillfully cast the spell with haste.` gag_haste",
