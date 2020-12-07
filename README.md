@@ -108,6 +108,16 @@ Astrax [100]: channu-mage-asphy-acid-pois-inner magical duck, Finland
 - [ginfo.py](./ginfo.py)
 
 
+## channeller&#46;py
+
+Channeller supply report message enumeration.
+
+```
+You feel a soothing inner warmth. You have a good supply of drained energy. (3/6)
+```
+
+- [channeller.py](./channeller.py)
+
 
 # Installation and configuration
 
