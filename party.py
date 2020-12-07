@@ -3,7 +3,8 @@ from json import loads as loadJson
 from itertools import groupby
 from multiprocessing.connection import Client
 from os import getuid
-from time import time
+from re import sub as reSub
+from time import sleep, time
 from tf import eval as tfeval  # type: ignore
 from typing import cast, FrozenSet, Mapping, NamedTuple, Optional, Sequence, Set
 
@@ -219,10 +220,9 @@ def changeTargetPlace(placeRaw: str):
     placeList = placeRaw.split()
     place = Place(int(placeList[0]), int(placeList[1]))
     if place in state.places:
-        tfeval(
-            "/trigger You are now target-healing {0}.".format(state.places[place].name)
-        )
-        state = state._replace(target=state.places[place].name)
+        target = reSub(r"^[+]", "", state.places[place].name)
+        state = state._replace(target=target)
+        tfeval("/trigger You are now target-healing {0}.".format(target))
 
 
 def pssStart(opts):
@@ -235,8 +235,9 @@ def pssEnd(opts):
     if state.pssHasMinions:
         state = state._replace(pssHasMinions=False)
     else:
-        tfeval("/edit -c0 party_pss")
-        tfeval("/edit -c0 party_pss_end")
+        tfeval("/edit -c0 -ag party_pss")
+        tfeval("/edit -c0 -ag party_pss_end")
+        tfeval("/edit -ag party_pss_start")
 
 
 def handleNewMember(newMember: Member):
@@ -276,6 +277,13 @@ def spepstringToInt(s: str) -> Optional[int]:
         return 0
     else:
         return None
+
+
+def manualPs(opts: str):
+    tfeval("/edit -an party_pss")
+    tfeval("/edit -an party_pss_start")
+    tfeval("/edit -an party_pss_end")
+    tfeval("@ps")
 
 
 def pssParse(opts):
@@ -382,7 +390,7 @@ def setup():
             )
 
     tfeval(
-        "/def -i -c0 -p20 -mregexp -t`"
+        "/def -i -ag -c0 -p20 -mregexp -t`"
         + "^\\\|(.)(([1-3?])\\\.([1-3?])  )?"  # idle, y, x
         + "([+]?[A-Za-z ]+)  "  # name {12}
         + "([a-z]+\\\|?[0-9]?)? +"  # state
@@ -401,12 +409,12 @@ def setup():
         + ""
     )
     tfeval(
-        "/def -i -F -p20 -msimple -t`"
+        "/def -i -F -ag -p20 -msimple -t`"
         + ",-----------------------------------------------------------------------------."
         + "` party_pss_start = /python_call party.pssStart"
     )
     tfeval(
-        "/def -i -F -c0 -p20 -msimple -t`"
+        "/def -i -F -ag -c0 -p20 -msimple -t`"
         + "\\\`-----------------------------------------------------------------------------'"
         + "` party_pss_end = /python_call party.pssEnd"
     )
