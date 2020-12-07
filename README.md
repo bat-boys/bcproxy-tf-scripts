@@ -97,6 +97,17 @@ types are collected to the same row with increasing resist.
 - [resists.py](./resists.py) triggers
 - [spells.py](./spells.py) definitions for spells
 
+## ginfo&#46;py
+
+Guild information shortener.
+
+```
+Astrax [100]: channu-mage-asphy-acid-pois-inner magical duck, Finland
+```
+
+- [ginfo.py](./ginfo.py)
+
+
 
 # Installation and configuration
 

@@ -351,6 +351,22 @@ def pssJsonToMember(j) -> Member:
     )
 
 
+def ginfo(s: str):
+    global state
+    # we'll want front row to be first, so this is done in a bit difficult way
+    names = list()
+    places = state.places
+    for y in [1, 2, 3]:
+        for x in [1, 2, 3]:
+            place = Place(x, y)
+            if place in places:
+                names.append(places[place].name)
+    for place in UNKNOWN_PLACES:
+        if place in places:
+            names.append(places[place].name)
+    tfeval("/python_call ginfo.partyReport {0}".format(" ".join(names)))
+
+
 def setup():
     tfeval(
         "/def -mglob -agGL -p10 -q -t'∴party *' bcproxy_party = "
