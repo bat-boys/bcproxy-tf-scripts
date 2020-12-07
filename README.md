@@ -119,6 +119,17 @@ You feel a soothing inner warmth. You have a good supply of drained energy. (3/6
 - [channeller.py](./channeller.py)
 
 
+## shrine&#46;py
+
+Shrine pray message enumeration.
+
+```
+You raise your eyes to the sky as celestial wind flows through you. (8/9)
+```
+
+- [shrine.py](./shrine.py)
+
+
 # Installation and configuration
 
 You need
