@@ -1,3 +1,4 @@
+from collections import deque  # type: ignore
 import dill  # type: ignore
 from multiprocessing.connection import Listener
 from os import getuid

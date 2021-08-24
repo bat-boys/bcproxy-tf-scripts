@@ -288,7 +288,7 @@ def nextPlayer():
     tfeval("/def -i -p10 -ag -msimple -t`` ginfo_countries_extra_linefeed")
     tfeval(
         "/def -i -ag -p10 -n1 -mregexp -t`"
-        + "is a level +([a-zA-Z0-9]+) (.+) of the ([A-Z][a-z]+) race."
+        + "is a level +([a-zA-Z0-9]+) (.+?)(?: player killer)? of the ([A-Z][a-z]+) race."
         + "` ginfo_finger = /python_call ginfo.fingerLevel \%P1 \%P2 \%P3"
     )
     tfeval('@grep "is a level" finger {0}'.format(player))

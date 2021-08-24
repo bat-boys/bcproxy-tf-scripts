@@ -11,7 +11,7 @@ MESSAGES: Sequence[str] = [
     "Clouds part and a ray of light shines down on the altar.",
     "You feel relaxed.",
     "A warm feeling spreads around your body.",
-    "A weary voice echoes in your mind 'nice to see.. an old friend.",
+    "A weary voice echoes in your mind 'Nice to see.. an old friend.'",
     "You raise your eyes to the sky as celestial wind flows through you.",
     "You burst out in tears as feeling of sudden happiness overwhelms you.",
 ]

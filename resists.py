@@ -67,7 +67,7 @@ def report(mobResist: MobResist):
     tfeval(
         "@party report {0} resists {1}".format(
             mobResist.name,
-            ", ".join(map(lambda r: "{0}: {1}".format(r[0].value, r[1].value), rs)),
+            ", ".join(map(lambda r: "{0} {1}%".format(r[0].value, r[1].value), rs)),
         )
     )
 
