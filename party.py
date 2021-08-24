@@ -213,6 +213,7 @@ def changeTargetName(name: str):
     global state
     tfeval("/trigger You are now target-healing {0}.".format(name))
     state = state._replace(target=name)
+    sendState()
 
 
 def changeTargetPlace(placeRaw: str):
@@ -223,6 +224,7 @@ def changeTargetPlace(placeRaw: str):
         target = reSub(r"^[+]", "", state.places[place].name)
         state = state._replace(target=target)
         tfeval("/trigger You are now target-healing {0}.".format(target))
+        sendState()
 
 
 def pssStart(opts):
@@ -258,6 +260,21 @@ def handleNewMember(newMember: Member):
 def triggerPartyMsg(msg: str):
     newMember = parseMessage(msg)
     handleNewMember(newMember)
+
+
+def triggerPartyLeave(msg: str):
+    global state
+    member = msg.capitalize()
+    toBeRemoved = None
+    for m in state.members:
+        if member == m.name:
+            toBeRemoved = m
+    if toBeRemoved:
+        newMembers = set(state.members)
+        newMembers.remove(toBeRemoved)
+        state = state._replace(members=frozenset(newMembers))
+        calculatePlaces()
+        sendState()
 
 
 def spepstringToInt(s: str) -> Optional[int]:
@@ -311,7 +328,7 @@ def pssParse(opts):
 
     newMember = pssJsonToMember(d)
 
-    if newMember.name[:1] == "+":
+    if newMember.name[:1] == "+" or state.manualMinions:
         state = state._replace(pssHasMinions=True)
 
     # leave invis to be handled by batclient messages
@@ -375,10 +392,25 @@ def ginfo(s: str):
     tfeval("/python_call ginfo.partyReport {0}".format(" ".join(names)))
 
 
+def toggleManualMinions(s: str):
+    global state
+    if state.manualMinions:
+        tfprint("Manual minions disabled")
+        state = state._replace(manualMinions=False)
+    else:
+        tfprint("Manual minions enabled")
+        state = state._replace(manualMinions=True)
+
+
 def setup():
     tfeval(
         "/def -mglob -agGL -p10 -q -t'∴party *' bcproxy_party = "
         + "/python_call party.triggerPartyMsg \%-1"
+    )
+
+    tfeval(
+        "/def -mglob -agGL -p10 -q -t'∴partyleave *' bcproxy_partyleave = "
+        + "/python_call party.triggerPartyLeave \%-1"
     )
 
     for x in range(1, 5):
@@ -423,4 +455,4 @@ def setup():
 
 
 setup()
-state = State(frozenset([]), {}, {}, None, False)
+state = State(frozenset([]), {}, {}, None, False, False)

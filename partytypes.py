@@ -44,3 +44,4 @@ class State(NamedTuple):
     previousPlaces: Mapping[str, Place]  # str is member.name
     target: Optional[str]
     pssHasMinions: bool
+    manualMinions: bool
