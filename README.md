@@ -89,13 +89,20 @@ This is the simplest example of socket communication.
 Astrax [report]: Jacobi resists: acid: 0, asphyxiation: 20, magical: 40
 ```
 
-Spell resists reporting to party report channel.
+Spell resists reporting to party report channel and general status output pane.
 
 Reports are done only once for given mob and damage type, and all the damage
 types are collected to the same row with increasing resist.
 
 - [resists.py](./resists.py) triggers
 - [spells.py](./spells.py) definitions for spells
+
+## heartbeat&#46;py
+
+![heartbeat](doc/heartbeat.png)
+
+Heartbeat and tick counter.
+
 
 ## ginfo&#46;py
 
