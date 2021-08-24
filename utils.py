@@ -1,6 +1,7 @@
 from enum import Enum
 from itertools import chain
 from typing import cast, NamedTuple, Optional, Sequence, TypeVar
+from re import compile as reCompile
 
 #: generic type variable, usage example in filterOutNones
 T = TypeVar("T")
@@ -38,3 +39,16 @@ def strtoi(s: str) -> Optional[int]:
 
 def filterOutNones(xs: Sequence[Optional[T]]) -> Sequence[T]:
     return cast(Sequence[T], filter(lambda x: x is not None, xs))
+
+
+TEXTDECODE_RE = reCompile(r"^(.*)_([0-9]+)_(.*)$")
+
+
+def textdecode(s: str) -> str:
+    while True:
+        match = TEXTDECODE_RE.match(s)
+        if match is None:
+            break
+        [begin, char, end] = match.groups()
+        s = begin + chr(int(char)) + end
+    return s

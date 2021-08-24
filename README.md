@@ -146,7 +146,7 @@ You need
 
 Copy or symlink python scripts from this repository to TinyFugue's `tf-lib` directory.
 
-Edit the [batmux.conf](./batmux.conf) to have correct paths to output scripts 
+Edit the [batmux.conf](./batmux.conf) to have correct paths to output scripts
 and start tmux:
 
     tmux new-session "tmux source-file ~/bat/bcproxy-tf-scripts/batmux.conf"

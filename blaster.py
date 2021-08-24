@@ -124,6 +124,7 @@ def setup():
     cmds: Sequence[str] = [
         "/def t = /python_call party.changeTargetName \%*",
         "/def f = /python_call ginfo.finger \%*",
+        "/def c = /python_call mobinfo.cons \%*",
         "/def pginfo = /python_call party.ginfo",
         "/def -i -q -b'^[z' = @cast stop",
         "/def -i -q -b'^[x' = @party prots",
