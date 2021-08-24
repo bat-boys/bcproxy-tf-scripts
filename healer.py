@@ -93,6 +93,7 @@ def setup():
         "/def -i -q -b'^[x' = @party prots",
         "/def -i -q -b'^[c' = @show effects",
         "/def -i -q -b'^[ ' = /python_call party.manualPs",
+        "/def key_f2 = @ch heal",
         "/def key_f3 = @ch wis",
         "/def key_f4 = @ch spr",
     ]

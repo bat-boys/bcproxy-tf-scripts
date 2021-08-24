@@ -67,15 +67,12 @@ SPELLS_FOR_CATEGORY: SpellsForCategory = {
     Category.BLAST_BIG: {
         "Q": getSpellByType(DamType.ASPHYXIATION, SpellType.MAGE_SINGLE_1),
         "W": getSpellByType(DamType.ACID, SpellType.MAGE_SINGLE_1),
-        "E": getSpellByType(DamType.POISON, SpellType.MAGE_SINGLE_1),
-        # channeller
-        "A": getSpellByType(DamType.MAGICAL, SpellType.CHANNELLER_SINGLE),
-        "S": getSpellByType(DamType.FIRE, SpellType.CHANNELLER_SINGLE),
-        "D": getSpellByType(DamType.ELECTRICITY, SpellType.CHANNELLER_SINGLE),
-        "F": getSpellByName("drain enemy"),
+        "E": getSpellByType(DamType.COLD, SpellType.MAGE_SINGLE_1),
+        "A": getSpellByType(DamType.MAGICAL, SpellType.MAGE_SINGLE_1),
+        "S": getSpellByType(DamType.FIRE, SpellType.MAGE_SINGLE_1),
         # area
-        "R": getSpellByType(DamType.ACID, SpellType.MAGE_AREA_1),
-        "T": getSpellByName("channelspray"),
+        "R": getSpellByType(DamType.ASPHYXIATION, SpellType.MAGE_AREA_1),
+        "D": getSpellByType(DamType.ACID, SpellType.MAGE_AREA_1),
     },
     Category.TYPEPROT: {
         "Q": getSpellByType(DamType.ASPHYXIATION, SpellType.MAGE_PROT_1),
