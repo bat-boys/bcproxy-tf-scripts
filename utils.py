@@ -13,6 +13,12 @@ class Color(NamedTuple):
     b: int
 
 
+RED = Color(0xFF, 0, 0)
+GREEN = Color(0, 0xFF, 0)
+YELLOW = Color(0xFF, 0xFF, 0)
+WHITE = Color(0xFF, 0xFF, 0xFF)
+
+
 def colorize(s: str, color: Optional[Color]) -> str:
     if color != None:
         color = cast(Color, color)

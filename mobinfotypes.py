@@ -7,11 +7,16 @@ class Monster(NamedTuple):
     id: int
     name: str
     shortname: Optional[str]
+    race: Optional[str]
+    gender: Optional[str]
+    align: Optional[str]
     spells: FrozenSet[str]
     skills: FrozenSet[str]
     killcount: Optional[int]
-    exp: Optional[str]
+    exp: Optional[float]
+    wikiexp: Optional[str]
     room: Optional[str]
+    areaId: Optional[str]
 
 
 class State(NamedTuple):
