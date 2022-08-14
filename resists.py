@@ -5,12 +5,14 @@ from os import getuid
 from tf import eval as tfeval  # type: ignore
 from typing import (
     FrozenSet,
+    List,
     Mapping,
     MutableMapping,
     MutableSequence,
     NamedTuple,
     Optional,
     Sequence,
+    Tuple,
 )
 
 from spells import DamType, getDamtypeColor, getSpellByName, Spell
@@ -63,13 +65,28 @@ def hits(mobAndSpell: str):
 
 def report(mobResist: MobResist):
     # sort resists from smallest to largest
+    screams: List[Tuple[DamType, Resist]] = []
+    resists: List[Tuple[DamType, Resist]] = []
     rs = sorted(list(mobResist.resists.items()), key=lambda x: x[1].value)
-    tfeval(
-        "@party report {0} resists {1}".format(
-            mobResist.name,
-            ", ".join(map(lambda r: "{0} {1}%".format(r[0].value, r[1].value), rs)),
+    for x in rs:
+        if x[1].value == 0:
+            screams.append((x[0].value, x[1].value))
+        else:
+            resists.append((x[0].value, x[1].value))
+
+    screamsStr = ", ".join(map(lambda r: str(r[0]).upper(), screams))
+    resistsStr = ", ".join(map(lambda r: "{1}% {0}".format(r[0], r[1]), resists))
+
+    if len(screams) > 0 and len(resists) > 0:
+        s = "{0} screams {1}, resists {2}".format(
+            mobResist.name, screamsStr, resistsStr
         )
-    )
+    elif len(screams) > 0:
+        s = "{0} screams {1}".format(mobResist.name, screamsStr)
+    else:
+        s = "{0} resists {1}".format(mobResist.name, resistsStr)
+
+    tfeval("@party report {0}".format(s))
 
     with Client(STATUS_SOCKET_FILE, "AF_UNIX") as conn:
         msg = Message(
