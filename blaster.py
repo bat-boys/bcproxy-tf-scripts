@@ -73,6 +73,7 @@ SPELLS_FOR_CATEGORY: SpellsForCategory = {
         # area
         "R": getSpellByType(DamType.ASPHYXIATION, SpellType.MAGE_AREA_1),
         "D": getSpellByType(DamType.ACID, SpellType.MAGE_AREA_1),
+        "F": getSpellByName("prismatic burst"),
     },
     Category.TYPEPROT: {
         "Q": getSpellByType(DamType.ASPHYXIATION, SpellType.MAGE_PROT_1),
@@ -87,9 +88,11 @@ SPELLS_FOR_CATEGORY: SpellsForCategory = {
     Category.PROT: {
         "Q": getSpellByName("dispel magical protection"),
         "W": getSpellByName("resist dispel"),
+        "E": getSpellByName("floating"),
         "A": getSpellByName("displacement"),
         "S": getSpellByName("blurred image"),
         "D": getSpellByName("shield of protection"),
+        "F": getSpellByName("iron will"),
     },
     Category.UTILITY: {
         "A": getSpellByName("shelter"),
@@ -112,6 +115,8 @@ PARTY_REPORT_SPELLS: PartyReportSpells = frozenset(
         [
             getSpellByName("dispel magical protection"),
             getSpellByName("resist dispel"),
+            getSpellByName("shelter"),
+            getSpellByName("neutralize field"),
         ]
     )
 )
@@ -121,23 +126,25 @@ def setup():
     cmds: Sequence[str] = [
         "/def t = /python_call party.changeTargetName \%*",
         "/def f = /python_call ginfo.finger \%*",
-        "/def c = /python_call mobinfo.cons \%*",
+        "/def c = /python_call mobinfo.moblook \%*",
         "/def pginfo = /python_call party.ginfo",
+        "/def cr = /python_call shipnav.cruise \%*",
         "/def -i -q -b'^[z' = @cast stop",
         "/def -i -q -b'^[x' = @party prots",
         "/def -i -q -b'^[c' = @show effects",
         "/def -i -q -b'^[ ' = /python_call party.manualPs",
         "/def -i -q -b'^[v' = /python_call resists.reportLast",
-        "/def key_f2 = @int",
-        "/def key_f3 = @wis",
-        "/def key_f4 = @spr",
-        "/def key_f5 = @asphy",
+        "/def key_f2 = @eqs int",
+        "/def key_f3 = @eqs wis",
+        "/def key_f4 = @eqs spr",
+        "/def key_f5 = @eqs blast",
         "/def -i -F -msimple -ag -t`You feel your staff touching your mind.` gag_staff_ceremony",
         "/def -i -F -msimple -ag -t`You surreptitiously conceal your spell casting.` gag_conceal",
         "/def -i -F -p10 -msimple -ag -t`spec_spell: Power flows from your staff to the spell.` gag_staff_cheapen",
         "/def -i -F -p10 -msimple -ag -t`spec_spell: Your fine choice of components lowers the effort of the spell.` gag_power_regs",
         "/def -i -F -p10 -mglob -ag -t`spec_spell: You pull out * which bursts into a zillion technicolour sparkles!` gag_acid",
         "/def -i -F -p10 -msimple -ag -t`spec_spell: Your knowledge in elemental powers helps you to save the reagent for further use.` gag_reagent_save",
+        "/def -i -F -p10 -mglob -t`You are standing in a flat stone terrace. *` inner_mellon = @say mellon;study",
     ]
 
     for cmd in cmds:

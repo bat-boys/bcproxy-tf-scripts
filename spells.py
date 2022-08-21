@@ -91,6 +91,14 @@ class Spell(NamedTuple):
 SPELLS: FrozenSet[Spell] = frozenset(
     [
         Spell(
+            "prismatic burst",
+            None,
+            None,
+            "",
+            True,
+            True,
+        ),
+        Spell(
             "acid blast",
             DamType.ACID,
             SpellType.MAGE_SINGLE_1,
@@ -638,6 +646,8 @@ SPELLS: FrozenSet[Spell] = frozenset(
         Spell("displacement", None, None, "diiiiuuunz aaanziz", True, False),
         Spell("blurred image", None, None, "ziiiuuuuns wiz", True, False),
         Spell("shield of protection", None, None, "nsiiznau", True, False),
+        Spell("iron will", None, None, "", True, False),
+        Spell("floating", None, None, "", True, False),
         Spell("drain enemy", None, None, "enfuego delvivendo", True, True),
         Spell(
             "dispel magical protection", None, None, "removezzzzzarmour", True, False
@@ -661,19 +671,6 @@ SPELLS: FrozenSet[Spell] = frozenset(
         Spell("minor heal", DamType.HEAL, None, "judicandus pzarcumus", True, False),
         Spell("major heal", DamType.HEAL, None, "judicandus pafzarmus", True, False),
         Spell("true heal", DamType.HEAL, None, "judicandus zapracus", True, False),
-        Spell("deaths door", DamType.HEAL, None, "mumbo jumbo", True, False),
-        Spell("runic heal", DamType.HEAL, None, "!* *", True, False),
-        Spell("remove poison", DamType.HEAL, None, "judicandus saugaiii", True, False),
-        Spell("cure player", DamType.HEAL, None, "freudemas egoid", True, False),
-        Spell("restore", DamType.HEAL, None, "Siwa on selvaa saastoa.", True, False),
-        Spell(
-            "natural renewal",
-            DamType.HEAL,
-            None,
-            "Naturallis Judicandus Imellys",
-            True,
-            False,
-        ),
         Spell("heal body", DamType.HEAL, None, "ZAP ZAP ZAP!", True, False),
         Spell(
             "minor party heal",
@@ -699,22 +696,28 @@ SPELLS: FrozenSet[Spell] = frozenset(
             False,
             True,
         ),
+        Spell("deaths door", None, None, "mumbo jumbo", True, False),
+        Spell("runic heal", None, None, "!* *", True, False),
+        Spell("remove poison", None, None, "judicandus saugaiii", True, False),
+        Spell("cure player", None, None, "freudemas egoid", True, False),
+        Spell("restore", None, None, "Siwa on selvaa saastoa.", True, False),
         Spell(
-            "unpain",
+            "natural renewal",
             None,
             None,
-            "harnaxan temnahecne",
+            "Naturallis Judicandus Imellys",
             True,
             False,
         ),
-        Spell(
-            "unstun",
-            None,
-            None,
-            "Paxus",
-            True,
-            False,
-        ),
+        Spell("unpain", None, None, "harnaxan temnahecne", True, False),
+        Spell("unstun", None, None, "Paxus", True, False),
+        Spell("earth power", None, None, "", True, False),
+        Spell("flex shield", None, None, "", True, False),
+        Spell("earth skin", None, None, "", True, False),
+        Spell("vine mantle", None, None, "", True, False),
+        Spell("water walking", None, None, "", True, False),
+        Spell("blessing of tarmalen", None, None, "", True, False),
+        Spell("regeneration", None, None, "", True, False),
     ]
 )
 

@@ -32,6 +32,7 @@ CATEGORY_BINDS: CategoryBinds = [
     [
         CategoryBind("^[1", Category.HEAL, "1: heal"),
         CategoryBind("^[2", Category.PROT, "2: prot"),
+        CategoryBind("^[3", Category.UTILITY, "3: util"),
     ],
 ]
 
@@ -66,11 +67,25 @@ SPELLS_FOR_CATEGORY: SpellsForCategory = {
         "R": getSpellByName("major heal"),
         "A": getSpellByName("minor party heal"),
         "S": getSpellByName("major party heal"),
-        "D": getSpellByName("deaths door"),
+        "D": getSpellByName("true party heal"),
+        "F": getSpellByName("deaths door"),
     },
     Category.PROT: {
         "Q": getSpellByName("unstun"),
         "W": getSpellByName("unpain"),
+        "E": getSpellByName("earth power"),
+        "A": getSpellByName("flex shield"),
+        "S": getSpellByName("earth skin"),
+        "D": getSpellByName("vine mantle"),
+        "F": getSpellByName("water walking"),
+    },
+    Category.UTILITY: {
+        "Q": getSpellByName("blessing of tarmalen"),
+        "W": getSpellByName("regeneration"),
+        "E": getSpellByName("cure player"),
+        "R": getSpellByName("natural renewal"),
+        "A": getSpellByName("remove poison"),
+        "S": getSpellByName("restore"),
     },
 }
 
@@ -93,9 +108,9 @@ def setup():
         "/def -i -q -b'^[x' = @party prots",
         "/def -i -q -b'^[c' = @show effects",
         "/def -i -q -b'^[ ' = /python_call party.manualPs",
-        "/def key_f2 = @ch heal",
-        "/def key_f3 = @ch wis",
-        "/def key_f4 = @ch spr",
+        "/def key_f2 = @eqs heal",
+        "/def key_f3 = @eqs wis",
+        "/def key_f4 = @eqs spr",
     ]
     for cmd in cmds:
         tfeval(cmd)
@@ -109,7 +124,7 @@ def setup():
         PARTY_REPORT_SPELL_TYPES,
     )
 
-    tfprint("Loaded blaster.py")
+    tfprint("Loaded healer.py")
 
 
 setup()

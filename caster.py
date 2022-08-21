@@ -87,7 +87,7 @@ def castSpell(spellBindId: SPELL_BIND_ID, atTarget: bool):
 
             tfeval("@cast {0}".format(castStr))
 
-            if partyReportCast(
+            if atTarget or partyReportCast(
                 spell, state.partyReportSpellTypes, state.partyReportSpells
             ):
                 tfeval("@quote 'cast info' party report")
