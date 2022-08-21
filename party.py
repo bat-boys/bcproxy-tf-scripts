@@ -4,6 +4,7 @@ from itertools import groupby
 from multiprocessing.connection import Client
 from os import getuid
 from re import sub as reSub
+from shlex import split
 from time import sleep, time
 from tf import eval as tfeval  # type: ignore
 from typing import cast, FrozenSet, Mapping, NamedTuple, Optional, Sequence, Set
@@ -60,6 +61,20 @@ PARTY_STATUS_UPDATE_FIELDS = [
     "party_creation_time",
 ]
 
+MINION_HP_STATUS_FIELDS = [
+    "player",
+    "minion",
+    "unknown1",
+    "hp",
+    "maxhp",
+    "sp",
+    "maxsp",
+    "ep",
+    "maxep",
+    "unknown2",
+    "unknown3",
+]
+
 
 def parseMessage(message) -> Member:
     """
@@ -70,7 +85,7 @@ def parseMessage(message) -> Member:
               boolean and number fields are converted to respective
               python data types
     """
-    d = dict(zip(PARTY_STATUS_UPDATE_FIELDS, message.split(" ")))
+    d = dict(zip(PARTY_STATUS_UPDATE_FIELDS, split(message)))
 
     x = strtoi(d["place_x"])
     y = strtoi(d["place_y"])
@@ -100,6 +115,44 @@ def parseMessage(message) -> Member:
         None,
         time(),
         MemberDataSource.BCPROXY,
+    )
+
+
+def parseMinionHpStatusMessage(message) -> Optional[Member]:
+    d = dict(zip(MINION_HP_STATUS_FIELDS, split(message)))
+    name = str(d["minion"]).capitalize()
+
+    member = getMemberByName(name)
+
+    if member == None:
+        return None
+
+    member = cast(Member, member)
+
+    return Member(
+        name,
+        int(d["hp"]),
+        int(d["maxhp"]),
+        int(d["sp"]),
+        int(d["maxsp"]),
+        int(d["ep"]),
+        int(int(d["maxep"]) / 10),
+        member.place,
+        member.formation,
+        member.member,
+        member.entry,
+        member.following,
+        member.leader,
+        member.linkdead,
+        member.resting,
+        member.idle,
+        member.invisible,
+        member.dead,
+        member.stunned,
+        member.unconscious,
+        member.ambushed,
+        time(),
+        MemberDataSource.MINION_HP_STATUS,
     )
 
 
@@ -262,6 +315,12 @@ def triggerPartyMsg(msg: str):
     handleNewMember(newMember)
 
 
+def triggerMinionHpStatusMsg(msg: str):
+    newMember = parseMinionHpStatusMessage(msg)
+    if newMember != None:
+        handleNewMember(cast(Member, newMember))
+
+
 def triggerPartyLeave(msg: str):
     global state
     member = msg.capitalize()
@@ -269,6 +328,9 @@ def triggerPartyLeave(msg: str):
     for m in state.members:
         if member == m.name:
             toBeRemoved = m
+        if m.name == "Astrax" or m.name == "Ruska":
+            state = State(frozenset([]), {}, {}, None, False, False)
+            return
     if toBeRemoved:
         newMembers = set(state.members)
         newMembers.remove(toBeRemoved)
@@ -330,6 +392,9 @@ def pssParse(opts):
 
     if newMember.name[:1] == "+" or state.manualMinions:
         state = state._replace(pssHasMinions=True)
+
+    if newMember.name[:1] == "+":
+        newMember = newMember._replace(name=newMember.name[1:])
 
     # leave invis to be handled by batclient messages
     if newMember.name != "Someone":
@@ -411,6 +476,11 @@ def setup():
     tfeval(
         "/def -mglob -agGL -p10 -q -t'∴partyleave *' bcproxy_partyleave = "
         + "/python_call party.triggerPartyLeave \%-1"
+    )
+
+    tfeval(
+        "/def -mglob -agGL -p10 -q -t'∴minionhpstatus *' bcproxy_minionhpstatus = "
+        + "/python_call party.triggerMinionHpStatusMsg \%-1"
     )
 
     for x in range(1, 5):

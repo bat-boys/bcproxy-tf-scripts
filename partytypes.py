@@ -10,6 +10,7 @@ class Place(NamedTuple):
 class MemberDataSource(NoValue):
     PSS = "pss"
     BCPROXY = "bcproxy"
+    MINION_HP_STATUS = "minionHpStatus"
 
 
 class Member(NamedTuple):
