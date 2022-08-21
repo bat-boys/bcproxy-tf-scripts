@@ -10,6 +10,7 @@ class Monster(NamedTuple):
     race: Optional[str]
     gender: Optional[str]
     align: Optional[str]
+    aggro: Optional[bool]
     spells: FrozenSet[str]
     skills: FrozenSet[str]
     killcount: Optional[int]

@@ -33,6 +33,7 @@ class CurrentMobInfo(NamedTuple):
     gender: Optional[str]
     description: List[str]
     eqs: List[str]
+    cmds: List[str]
 
 
 class State(NamedTuple):
@@ -44,11 +45,15 @@ class State(NamedTuple):
     areaId: Optional[int]
     monsters: Mapping[str, Monster]
     aggroStatus: Dict[str, bool]
+    newMonstersInThisRoom: List[str]
     monstersInThisRoom: List[str]
     currentMobInfo: Optional[CurrentMobInfo]
     isDeadShortname: Optional[str]
     isDeadTimestamp: Optional[float]
     myLevel: Optional[int]
+    mobInfoCommands: List[str]
+    areaHasRooms: bool
+    auto: bool
 
 
 MOBINFO_SOCKET_FILE = "/var/run/user/{0}/bcproxy-tf-scripts-mobinfo".format(getuid())
@@ -70,6 +75,7 @@ MONSTERS_BY_AREA = """SELECT
   m.race,
   m.gender,
   m.alignment,
+  m.aggro,
   m.spells,
   m.skills,
   m.wikiexp,
@@ -158,8 +164,37 @@ VALUES
   (%(area)s, 't', 'f', 'f', %(areaId)s)
 """
 
+LEVEL_INSERT = """INSERT INTO
+  monsterlvl (monster_id, ownlvl, consider, created)
+VALUES
+  (%(monsterId)s, %(ownlvl)s, %(consider)s, NOW())
+"""
 
-state = State(None, None, None, None, None, None, {}, {}, [], None, None, None, None)
+state = State(
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    {},
+    {},
+    [],
+    [],
+    None,
+    None,
+    None,
+    None,
+    [],
+    False,
+    False,
+)
+
+
+def toggleAuto(s: str):
+    global state
+    state = state._replace(auto=not state.auto)
+    tfprint("Automatic moblook: {0}".format(state.auto))
 
 
 def loadArea(area: str):
@@ -187,6 +222,7 @@ def loadArea(area: str):
             monster.race,
             monster.gender,
             monster.alignment,
+            monster.aggro,
             monster.spells,
             monster.skills,
             monster.killcount,
@@ -196,7 +232,7 @@ def loadArea(area: str):
             monster.area_id,
         )
 
-    state = state._replace(areaId=areaId.id, monsters=monsters, aggroStatus={})
+    state = state._replace(areaId=areaId.id, monsters=monsters)
     tfprint("Loaded {0} monsters for area {1}".format(len(monsters), area))
 
 
@@ -204,7 +240,7 @@ def addMonsterToRoom(name: str):
     global state
     # encircled, wrapped
     parsedName = name
-    state.monstersInThisRoom.append(name)
+    state.newMonstersInThisRoom.append(name)
 
 
 def setMonsterAggro(name: str):
@@ -235,11 +271,36 @@ def monsterFromIndex(i: int) -> Optional[Monster]:
 
 def monsterInfo():
     global state
+
+    shortnames = []
+
     for name in state.monstersInThisRoom:
         indexAndMonster = monsterIndex(name)
         if indexAndMonster is not None:
             state.conn.send_bytes(dill.dumps(indexAndMonster))
-    state.monstersInThisRoom.clear()
+            if name in state.monsters and state.monsters[name].shortname is not None:
+                shortnames.append(state.monsters[name].shortname)
+    if state.auto:
+        doMoblook("")
+
+
+def doMoblook(s: str):
+    global state
+    uniqCount = len(set(state.monstersInThisRoom))
+    if uniqCount == 1:
+        mi = monsterIndex(state.monstersInThisRoom[0])
+        if mi is not None:
+            [index, monster] = mi
+            if monster.shortname is not None and (
+                monster.race is None or monster.gender is None or monster.aggro is None
+            ):
+                moblook("{0} {1}".format(index + 1, monster.shortname))
+            elif monster.shortname is None:
+                tfprint("Monster not known, do a manual moblook")
+            else:
+                tfprint("{0} already in db".format(monster.shortname))
+    elif uniqCount > 1:
+        tfprint("More than one monster in the room, not supported")
 
 
 def updateMonster(id: int, name: str):
@@ -307,13 +368,14 @@ def whereami(s: str):
     if state.area != area and area[-13:] != "(player city)" and area[-6:] != "(ship)":
         tfprint("Area changed to {0}".format(area))
         state.monstersInThisRoom.clear()
-        state = state._replace(area=area, room=None)
+        state = state._replace(area=area)
         loadArea(area)
 
 
 def whereamiMappedArea(s: str):
     global state
     area = s.lower()
+    state = state._replace(areaHasRooms=False, room=None)
     if state.area is None or not state.area.startswith(area):
         tfeval("@whereami")
 
@@ -326,11 +388,26 @@ def room(s: str):
         state = state._replace(room=room, area=None, areaId=None, monsters={})
         return
     elif state.area != area:
-        tfeval("@whereami")
-    state = state._replace(room=room)
+        whereami(area)
+    state = state._replace(room=room, areaHasRooms=True)
+    roomDone()
 
 
 def prompt(s: str):
+    global state
+    if state.areaHasRooms == False and len(state.newMonstersInThisRoom) > 0:
+        roomDone()
+
+
+def lookEnd(s: str):
+    roomDone()
+
+
+def roomDone():
+    global state
+    state = state._replace(
+        monstersInThisRoom=state.newMonstersInThisRoom, newMonstersInThisRoom=[]
+    )
     updateMonsters()
     monsterInfo()
 
@@ -470,7 +547,9 @@ def moblook(s: str):
     [i, name] = s.split(" ", 1)
     try:
         state = state._replace(
-            currentMobInfo=CurrentMobInfo(int(i), None, None, None, [], [])
+            currentMobInfo=CurrentMobInfo(
+                int(i), None, None, None, [], [], deepcopy(state.mobInfoCommands)
+            )
         )
         tfeval("@moblook {0}".format(name))
     except:
@@ -481,7 +560,6 @@ def moblook(s: str):
 
 
 def moblookStart(s: str):
-    global state
     tfeval("/edit -c100 mobinfo_scan")
     tfeval("/edit -c100 mobinfo_gender")
 
@@ -497,12 +575,15 @@ def moblookEnd(s: str):
 
     if state.currentMobInfo is not None:
         monster = monsterFromIndex(state.currentMobInfo.i)
-        if monster is not None:
+        shortname = state.currentMobInfo.shortname
+        gender = state.currentMobInfo.gender
+        race = state.currentMobInfo.race
+
+        if race is None:
+            tfprint("Monocle peer did not work, try again!")
+        elif monster is not None:
             id = monster.id
             name = monster.name
-            shortname = state.currentMobInfo.shortname
-            gender = state.currentMobInfo.gender
-            race = state.currentMobInfo.race
             description: Optional[str] = None
             if len(state.currentMobInfo.description) > 0:
                 description = "\n".join(state.currentMobInfo.description)
@@ -532,6 +613,19 @@ def moblookEnd(s: str):
             if state.area:
                 loadArea(state.area)
 
+            doNextMoblookCmd()
+
+
+def doNextMoblookCmd():
+    global state
+    if state.currentMobInfo is None or len(state.currentMobInfo.cmds) == 0:
+        return
+
+    cmd = "@{0} {1};cast info".format(
+        state.currentMobInfo.cmds.pop(0), state.currentMobInfo.shortname
+    )
+    tfeval(cmd)
+
 
 def align(s: str):
     [shortname, align] = s.split("_", 1)
@@ -544,11 +638,66 @@ def align(s: str):
             tfprint("Updating monster {0} {1}: ({2})".format(id, monster.name, align))
             state.sqlCursor.execute(
                 MONSTER_ALIGNMENT_UPDATE,
-                {"monsterId": monster.id, "alignment": align},
+                {"monsterId": id, "alignment": align},
             )
             state.sqlConnection.commit()
             if state.area:
                 loadArea(state.area)
+            doNextMoblookCmd()
+
+
+def whoami(s: str):
+    global state
+    if s == "I":
+        lvl = 101
+    elif s == "II":
+        lvl = 102
+    elif s == "III":
+        lvl = 103
+    elif s == "IV":
+        lvl = 104
+    elif s == "V":
+        lvl = 105
+    else:
+        lvl = int(s)
+    state = state._replace(myLevel=lvl)
+
+
+def levelStart(s: str):
+    global state
+    if state.currentMobInfo is not None and state.currentMobInfo.shortname == s:
+        tfeval("/edit -c100 mobinfo_level")
+    else:
+        tfeval("/edit -c0 mobinfo_level")
+
+
+def level(s: str):
+    global state
+    tfprint(s)
+    tfeval("/edit -c0 mobinfo_level")
+    if state.currentMobInfo is not None:
+        monster = monsterFromIndex(state.currentMobInfo.i)
+        if monster is not None:
+            id = monster.id
+            ownlvl = state.myLevel
+            consider = s
+            tfprint(
+                "Updating monster {0} {1}: (level {2}: {3})".format(
+                    id, monster.name, ownlvl, consider
+                )
+            )
+            state.sqlCursor.execute(
+                LEVEL_INSERT, {"monsterId": id, "consider": consider, "ownlvl": ownlvl}
+            )
+            state.sqlConnection.commit()
+            doNextMoblookCmd()
+
+
+def parseMobInfoCommands(s: str):
+    global state
+    cmds = s.split(";")
+    tfprint(str(cmds))
+    state = state._replace(mobInfoCommands=cmds)
 
 
 def setup():
@@ -573,6 +722,9 @@ def setup():
         "/def -agGL -msimple -t`"
         + "Astounding!  You can see things no one else can see, such as moblook_trigger_ends.`"
         + " mobinfo_moblook_end = /python_call mobinfo.moblookEnd",
+        "/def -agGL -msimple -t`"
+        + "Astounding!  You can see things no one else can see, such as look_ends.`"
+        + " mobinfo_look_end = /python_call mobinfo.lookEnd",
         "/def -p10 -c0 -mregexp -t`"
         + "^([A-Za-z ,.'-]+) is (in (a )?)?(excellent shape|good shape|slightly hurt|noticeably hurt|not in a good shape|bad shape|very bad shape|near death) \\\(([0-9]+).\\\)\\\.\$`"
         + " mobinfo_scan = /python_call mobinfo.shortname \%P1",
@@ -604,13 +756,28 @@ def setup():
         + "^You are in '.+', which is on the continent of .+\\\. \\\(Coordinates: [0-9]+x, [0-9]+y; Global: [0-9]+x, [0-9]+y\\\)\$`"
         + " mobinfo_whereami_outworld = /python_call mobinfo.whereami outworld",
         "/def -p10 -F -mregexp -t`"
-        + "^[<.]---------[^-]---------[>.] +Loc: +(.+) \\\(.+\\\)?\$`"
+        + "^[<.]---------[-^]---------[>.] +Loc: +(.+) \\\(.+\\\)?\$`"
         + " mobinfo_whereami_mapped_area = /python_call mobinfo.whereamiMappedArea \%P1",
         "/def -p10 -F -mregexp -t`"
-        + "^[<.]---------[^-]---------[>.] +Loc: [^(]+ \\\[`"
+        + "^[<.]---------[-^]---------[>.] +Loc: [^(]+ \\\[`"
         + " mobinfo_whereami_mapped_area_outworld = /python_call mobinfo.whereamiMappedArea outworld",
         # prompt must be matched from hook PROMPT
-        "/def -p10 -F -mglob -h`PROMPT *` mobinfo_prompt = /python_call mobinfo.prompt",
+        "/def -p10 -F -mglob -h`PROMPT PROMPT:*` mobinfo_prompt = /python_call mobinfo.prompt",
+        "/def -p10 -F -mregexp -t`"
+        + "^You are .+, a level ([0-9IVX]+|)`"
+        + " mobinfo_whoami_level = /python_call mobinfo.whoami \%P1",
+        "/def -p10 -F -mregexp -t`"
+        + "^spec_skill: You take a close look at (.+) in comparison to yourself.\$`"
+        + " mobinfo_level_start = /python_call mobinfo.levelStart \%P1",
+        "/def -p10 -c0 -F -mglob -t`"
+        + "spec_skill: Level-wise, *`"
+        + " mobinfo_level = /python_call mobinfo.level \%-2",
+        "/def -p10 -F -mregexp -t`"
+        + "^'mobinfo_commands' is an command-alias to '(.+)'\\\.\$`"
+        + " mobinfo_commands = /python_call mobinfo.parseMobInfoCommands \%P1",
+        "/def -p10 -mglob -t`Exited to map from *` " + "mobinfo_area_exit = @whereami",
+        "@whoami",
+        "@command mobinfo_commands",
     ]
     # this command is too difficult to get through tfeval as string
     tfeval("/load ~/bat/bcproxy-tf-scripts/mobinfo.tf")
