@@ -8,7 +8,7 @@ from tfutils import tfprint
 from utils import strtoi
 
 
-MAGE = reCompile("Mage \((?P<subguilds>.+)\)")
+MAGE = reCompile("(:?Mage|Triad) \((?P<subguilds>.+)\)")
 MAGE_TYPES = reCompile("^(?P<type>.+?)(?: \[(?P<lvl>\d+)\])?$")
 GUILD_WITH_LEVELS = reCompile("(?P<guild>.+) \((?P<lvl>\d+)(?:/(?P<maxlvl>\d+))?\)")
 
@@ -42,6 +42,9 @@ GUILD_ORDER = [
     "Nergal",
     "Reaver",
     "Priests",
+    "Triad",
+    "Curate",
+    "Seminary",
     # good religious
     "Monk",
     "Templar",
@@ -96,6 +99,9 @@ GUILD_SHORTHAND = {
     "Nergal": "nergal",
     "Reaver": "reaver",
     "Priests": "priest",
+    "Triad": "triad",
+    "Curate": "curate",
+    "Seminary": "seminary",
     # good religious
     "Monk": "monk",
     "Templar": "templa",
@@ -166,7 +172,7 @@ def end(s: str):
         tfeval("@party report {0}".format(toString()))
     else:
         tfprint(toString())
-    cleanup()
+    cleanup("")
 
 
 def hidden(s: str):
@@ -177,7 +183,7 @@ def hidden(s: str):
         tfeval("@party report {0}".format(msg))
     else:
         tfprint(msg)
-    cleanup()
+    cleanup("")
 
 
 def guild(s: str):
@@ -185,7 +191,6 @@ def guild(s: str):
     mage = MAGE.match(s)
     guildWithLevels = GUILD_WITH_LEVELS.match(s)
     if mage and mage.group("subguilds") != "10/10":
-        state.guilds.add(PlayerGuild("Mage", 10, 10))
         for typeStr in mage.group("subguilds").split(", "):
             type = MAGE_TYPES.match(typeStr)
             if type:
@@ -296,7 +301,7 @@ def nextPlayer():
     tfeval("@ginfo {0}".format(player))
 
 
-def cleanup():
+def cleanup(s: str):
     global state
     state = state._replace(player=None, guilds=set(), background=None, country=None)
     tfeval("/undef ginfo_countries_registered")
