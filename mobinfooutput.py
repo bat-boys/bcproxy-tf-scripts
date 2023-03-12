@@ -21,7 +21,7 @@ def receiveMessage(msg: Tuple[int, Monster]):
             monster.shortname is None
             or monster.race is None
             or monster.gender is None
-            or monster.align is None
+            # or monster.align is None
         ):
             mobnameColor = Color(0xFF, 0xFF, 0xA0)
         print(colorize("{0} {1}".format(index + 1, monster.name[:35]), mobnameColor))

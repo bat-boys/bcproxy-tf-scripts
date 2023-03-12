@@ -1,29 +1,34 @@
+from enum import Enum
 from copy import deepcopy
 import dill  # type: ignore
 from multiprocessing.connection import Client
 from os import getuid
 import psycopg2  # type: ignore
 import psycopg2.extras  # type: ignore
+from re import search, sub
 from time import time
 from tf import eval as tfeval  # type: ignore
 from typing import (
     Any,
     Dict,
-    FrozenSet,
     List,
     Mapping,
-    MutableMapping,
-    MutableSequence,
     NamedTuple,
     Optional,
-    Sequence,
-    Set,
     Tuple,
 )
 
 from mobinfotypes import Monster
+from spells import organizeSpells
 from tfutils import tfprint
 from utils import textdecode
+
+
+class Auto(Enum):
+    OFF = "off"
+    ON_QUICK = "on_quick"
+    ON_DA = "on_detect_alignment"
+    ON_SKILLS = "on_skills"
 
 
 class CurrentMobInfo(NamedTuple):
@@ -53,7 +58,7 @@ class State(NamedTuple):
     myLevel: Optional[int]
     mobInfoCommands: List[str]
     areaHasRooms: bool
-    auto: bool
+    auto: Auto
 
 
 MOBINFO_SOCKET_FILE = "/var/run/user/{0}/bcproxy-tf-scripts-mobinfo".format(getuid())
@@ -187,13 +192,23 @@ state = State(
     None,
     [],
     False,
-    False,
+    Auto.OFF,
 )
 
 
 def toggleAuto(s: str):
     global state
-    state = state._replace(auto=not state.auto)
+    tfeval("@whoami")
+    tfeval("@command mobinfo_commands")
+    if state.auto == Auto.OFF:
+        state = state._replace(auto=Auto.ON_QUICK)
+    elif state.auto == Auto.ON_QUICK:
+        state = state._replace(auto=Auto.ON_SKILLS)
+    elif state.auto == Auto.ON_SKILLS:
+        state = state._replace(auto=Auto.ON_DA)
+    else:
+        state = state._replace(auto=Auto.OFF)
+
     tfprint("Automatic moblook: {0}".format(state.auto))
 
 
@@ -236,20 +251,51 @@ def loadArea(area: str):
     tfprint("Loaded {0} monsters for area {1}".format(len(monsters), area))
 
 
-def addMonsterToRoom(name: str):
-    global state
-    # encircled, wrapped
-    parsedName = name
-    state.newMonstersInThisRoom.append(name)
+def parseName(rawName: str) -> str:
+    # remove invis () first
+    n1 = sub(r"^\((.+)\)$", "\\1", rawName)
+    name = (
+        # desters
+        n1.replace(" <cyan and blue aura>", "")
+        .replace(" <cyan aura>", "")
+        .replace(" <blue aura>", "")
+        # nergal
+        .replace(" <encircled>", "")
+    )
+
+    return name
 
 
-def setMonsterAggro(name: str):
+def addMonsterToRoom(rawName: str):
     global state
+    name = parseName(rawName)
+    # ignore some monsters
+    if not (
+        search(r"\[summoned by [A-Z][a-z]+\]", name)
+        or name.startswith("an essence of unknown origin")
+        or name.startswith("Wandering ghoul of ")
+        or name.startswith("Wandering mummy of ")
+        or name.startswith("Wandering skeleton of ")
+        or name.startswith("Wandering spectre of ")
+        or name.startswith("Wandering wight of ")
+        or name.startswith("Wandering zombie of ")
+        or name.startswith("Wandering headless ghoul of ")
+    ):
+        # tfprint("adding {0}".format(name))
+        state.newMonstersInThisRoom.append(name)
+    else:
+        tfprint("ignoring {0}".format(name))
+
+
+def setMonsterAggro(rawName: str):
+    global state
+    name = parseName(rawName)
     state.aggroStatus[name] = True
 
 
-def setMonsterUnaggro(name: str):
+def setMonsterUnaggro(rawName: str):
     global state
+    name = parseName(rawName)
     state.aggroStatus[name] = False
 
 
@@ -280,27 +326,35 @@ def monsterInfo():
             state.conn.send_bytes(dill.dumps(indexAndMonster))
             if name in state.monsters and state.monsters[name].shortname is not None:
                 shortnames.append(state.monsters[name].shortname)
-    if state.auto:
+    if state.auto is not Auto.OFF:
         doMoblook("")
 
 
 def doMoblook(s: str):
     global state
-    uniqCount = len(set(state.monstersInThisRoom))
-    if uniqCount == 1:
-        mi = monsterIndex(state.monstersInThisRoom[0])
-        if mi is not None:
-            [index, monster] = mi
-            if monster.shortname is not None and (
-                monster.race is None or monster.gender is None or monster.aggro is None
-            ):
-                moblook("{0} {1}".format(index + 1, monster.shortname))
-            elif monster.shortname is None:
-                tfprint("Monster not known, do a manual moblook")
-            else:
-                tfprint("{0} already in db".format(monster.shortname))
-    elif uniqCount > 1:
-        tfprint("More than one monster in the room, not supported")
+
+    def isUnknown(mi):
+        if mi is None:
+            return False
+
+        [i, m] = mi
+        return (
+            m.shortname is not None
+            and (m.race is None
+                 or m.gender is None
+                 or m.aggro is None
+                 or (state.auto is Auto.ON_DA and m.align is None))
+        )
+
+    monsters = list(map(monsterIndex, state.monstersInThisRoom))
+    unknown = list(filter(isUnknown, monsters))
+
+    # only do one look automatically as it will fail for the rest anyways
+    # if done right after previous
+
+    if len(unknown) > 0:
+        [index, monster] = unknown.pop()
+        moblook("{0} {1}".format(index + 1, monster.shortname))
 
 
 def updateMonster(id: int, name: str):
@@ -370,6 +424,8 @@ def whereami(s: str):
         state.monstersInThisRoom.clear()
         state = state._replace(area=area)
         loadArea(area)
+    else:
+        state.monstersInThisRoom.clear()
 
 
 def whereamiMappedArea(s: str):
@@ -388,6 +444,7 @@ def room(s: str):
         state = state._replace(room=room, area=None, areaId=None, monsters={})
         return
     elif state.area != area:
+        state.monstersInThisRoom.clear()
         whereami(area)
     state = state._replace(room=room, areaHasRooms=True)
     roomDone()
@@ -542,9 +599,74 @@ def eqsStart(s: str):
         tfeval("/edit -c100 mobinfo_eqs")
 
 
+def _report(m: Monster):
+    exp = f"{m.exp}k" if m.exp else None
+    spells = organizeSpells(m.spells) if m.spells else None
+    stats = [x for x in [m.name, exp, m.race, m.align] if x]
+    s = " | ".join(stats)
+    tfeval(f"@party report {s}")
+    if spells:
+        tfeval(f"@party report   {spells}")
+
+def report(s: str):
+    global state
+
+    if s[:3] == 'top':
+        reportTop(s[4:])
+    elif search(r"^\d", s):
+        m = monsterFromIndex(int(s))
+        if m is not None:
+            _report(m)
+        else:
+            tfprint(f"No monster with index {s}")
+    elif s:
+        names = state.monsters.keys()
+        matches = [x for x in names if x.lower().find(s.lower()) != -1]
+        if len(matches) == 1:
+            _report(state.monsters[matches[0]])
+        elif len(matches) > 1:
+            tfprint("Multiple matches:")
+            for match in matches:
+                i = monsterIndex(match)
+                tfprint(f"{i[0] + 1}: {match}")
+        else:
+            tfprint(f"No matches for {s}")
+    elif len(state.monstersInThisRoom) > 0:
+        ms = [state.monsters[m] for m in state.monstersInThisRoom]
+        ms.sort(key=lambda m: m.exp or 0, reverse=True)
+        for m in ms:
+            _report(m)
+
+def reportTop(s: str):
+    global state
+    if search(r"^\d+$", s):
+        limit = int(s)
+    else:
+        limit = 5
+
+    monsters = [m for m in state.monsters.values() if m.exp]
+    monsters = sorted(monsters, key=lambda m: m.exp, reverse=True)
+    header = f"top {limit} monsters in {state.area} by exp"
+    tfeval(f"@party report {header}")
+    tfeval(f"@party report {'-' * len(header)}")
+    for m in monsters[:limit]:
+        _report(m)
+
+
 def moblook(s: str):
     global state
-    [i, name] = s.split(" ", 1)
+
+    if search(r"^\d", s):
+        [i, name] = s.split(" ", 1)
+    elif len(state.monstersInThisRoom) == 1:
+        [i, _] = monsterIndex(state.monstersInThisRoom[0])
+        i += 1
+        tfprint(f"i: {i}, mob: {state.monstersInThisRoom[0]}")
+        name = s
+    else:
+        tfprint("No default monster in room, use syntax /c 123 mob")
+        return
+
     try:
         state = state._replace(
             currentMobInfo=CurrentMobInfo(
@@ -695,7 +817,13 @@ def level(s: str):
 
 def parseMobInfoCommands(s: str):
     global state
-    cmds = s.split(";")
+    cmdsParsed = [x for x in s.split(";") if x != '']
+    if state.auto is Auto.ON_SKILLS:
+        cmds = cmdsParsed
+    elif state.auto is Auto.ON_DA:
+        cmds = ["cast 'detect alignment'", *cmdsParsed]
+    else:
+        cmds = []
     tfprint(str(cmds))
     state = state._replace(mobInfoCommands=cmds)
 
@@ -776,8 +904,6 @@ def setup():
         + "^'mobinfo_commands' is an command-alias to '(.+)'\\\.\$`"
         + " mobinfo_commands = /python_call mobinfo.parseMobInfoCommands \%P1",
         "/def -p10 -mglob -t`Exited to map from *` " + "mobinfo_area_exit = @whereami",
-        "@whoami",
-        "@command mobinfo_commands",
     ]
     # this command is too difficult to get through tfeval as string
     tfeval("/load ~/bat/bcproxy-tf-scripts/mobinfo.tf")
@@ -789,6 +915,3 @@ def setup():
 
 
 setup()
-
-# TODO
-# - oma level, consider level

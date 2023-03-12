@@ -1,4 +1,4 @@
-from typing import FrozenSet, Mapping, NamedTuple, Optional, Sequence
+from typing import FrozenSet, List, Mapping, NamedTuple, Optional, Sequence
 
 from utils import Color, NoValue
 
@@ -70,8 +70,12 @@ class SpellType(NoValue):
     MAGE_SINGLE_3 = "mage_single_3"
     MAGE_SINGLE_4 = "mage_single_4"
     MAGE_SINGLE_5 = "mage_single_5"
+    MAGE_SINGLE_6 = "mage_single_6"
+    MAGE_SINGLE_7 = "mage_single_7"
+    MAGE_SINGLE_8 = "mage_single_8"
     MAGE_AREA_1 = "mage_area_1"  # biggest
     MAGE_AREA_2 = "mage_area_2"
+    MAGE_AREA_3 = "mage_area_3"
     MAGE_PROT_1 = "mage_prot_1"  # greater
     MAGE_PROT_2 = "mage_prot_2"
     CHANNELLER_SINGLE = "channeller_single"
@@ -451,6 +455,14 @@ SPELLS: FrozenSet[Spell] = frozenset(
             True,
         ),
         Spell(
+            "fireball",
+            DamType.FIRE,
+            SpellType.MAGE_AREA_3,
+            "zing yulygul bugh",
+            True,
+            True,
+        ),
+        Spell(
             "flame shield",
             DamType.FIRE,
             SpellType.MAGE_PROT_1,
@@ -642,6 +654,126 @@ SPELLS: FrozenSet[Spell] = frozenset(
             True,
             False,
         ),
+        Spell(
+            "psychic crush",
+            DamType.PSI,
+            SpellType.MAGE_SINGLE_1,
+            "tora tora tora",
+            True,
+            True,
+        ),
+        Spell(
+            "mind disruption",
+            DamType.PSI,
+            SpellType.MAGE_SINGLE_2,
+            "omm mar nak semen",
+            True,
+            True,
+        ),
+        Spell(
+            "psi blast",
+            DamType.PSI,
+            SpellType.MAGE_SINGLE_3,
+            "omm zur semen",
+            True,
+            True,
+        ),
+        Spell(
+            "psi bolt",
+            DamType.PSI,
+            SpellType.MAGE_SINGLE_4,
+            "omm zur sanc",
+            True,
+            True,
+        ),
+        Spell(
+            "mind blast",
+            DamType.PSI,
+            SpellType.MAGE_SINGLE_5,
+            "omm zur fehh",
+            True,
+            True,
+        ),
+        Spell(
+            "psychic storm",
+            DamType.PSI,
+            SpellType.MAGE_AREA_1,
+            "omm mar nak grttzt gnatlnamauch",
+            True,
+            True,
+        ),
+        Spell(
+            "psychic shout",
+            DamType.PSI,
+            SpellType.MAGE_AREA_2,
+            "omm zur semen gnatlnamauch",
+            True,
+            True,
+        ),
+        Spell(
+            "harm body",
+            DamType.HARM,
+            SpellType.MAGE_SINGLE_1,
+            "PAF PAF PAF!",
+            True,
+            True,
+        ),
+        Spell(
+            "aneurysm",
+            DamType.HARM,
+            SpellType.MAGE_SINGLE_2,
+            "yugzhrr paf",
+            True,
+            True,
+        ),
+        Spell(
+            "hemorrhage",
+            DamType.HARM,
+            SpellType.MAGE_SINGLE_3,
+            "yugzhrr",
+            True,
+            True,
+        ),
+        Spell(
+            "cause critical wounds",
+            DamType.HARM,
+            SpellType.MAGE_SINGLE_4,
+            "rhuuuumm angotz klekltz",
+            True,
+            True,
+        ),
+        Spell(
+            "cause serious wounds",
+            DamType.HARM,
+            SpellType.MAGE_SINGLE_5,
+            "rhuuuumm angotz amprltz",
+            True,
+            True,
+        ),
+        Spell(
+            "cause light wounds",
+            DamType.HARM,
+            SpellType.MAGE_SINGLE_6,
+            "tosi pieni neula",
+            True,
+            True,
+        ),
+        Spell(
+            "half harm",
+            DamType.HARM,
+            SpellType.MAGE_SINGLE_7,
+            "ruotsalainen ensiapu",
+            True,
+            True,
+        ),
+        Spell(
+            "harm",
+            DamType.HARM,
+            SpellType.MAGE_SINGLE_8,
+            "puujalka jumalauta",
+            True,
+            True,
+        ),
         Spell("channelspray", None, None, "grinurb sdan imflagrum", True, True),
         Spell("displacement", None, None, "diiiiuuunz aaanziz", True, False),
         Spell("blurred image", None, None, "ziiiuuuuns wiz", True, False),
@@ -729,8 +861,31 @@ def getSpellByType(damType: DamType, spellType: SpellType) -> Optional[Spell]:
     return None
 
 
-def getSpellByName(name: str) -> Optional[Spell]:
+def getSpellByName(name: str) -> Spell:
     for spell in SPELLS:
         if spell.name == name:
             return spell
-    return None
+    return Spell(name, None, None, "", False, False)
+
+def organizeSpells(names: List[str]) -> str:
+    parsedNames = {n.lower() for n in names}
+    spells = frozenset(map(getSpellByName, parsedNames))
+    small_types = frozenset([SpellType.MAGE_SINGLE_2, SpellType.MAGE_SINGLE_3, SpellType.MAGE_SINGLE_4, SpellType.MAGE_SINGLE_5, SpellType.MAGE_SINGLE_6, SpellType.MAGE_SINGLE_7, SpellType.MAGE_SINGLE_8, SpellType.MAGE_AREA_2, SpellType.MAGE_AREA_3])
+    smalls = {s for s in spells if s.spellType in small_types}
+    bigs = {s for s in spells if s.spellType in frozenset({SpellType.MAGE_SINGLE_1})}
+    areas = {s for s in spells if s.spellType in frozenset({SpellType.MAGE_AREA_1})}
+    importants = {s for s in spells if s.name in frozenset({"banish", "party banish", "forget", "suppress magic", "imprisonment", "anti magic field"})}
+
+    others = spells - smalls - bigs - areas - importants
+
+    def to_s(spells: FrozenSet[Spell]) -> str:
+        types = {s.damType.value for s in spells}
+        return ", ".join(sorted(types))
+
+
+    important_s = ", ".join(sorted([s.name for s in importants])) if importants else None
+    smalls_s = f"small blast ({to_s(smalls)})" if smalls else None
+    bigs_s = f"big blast ({to_s(bigs)})" if bigs else None
+    areas_s = f"area ({to_s(areas)})" if areas else None
+    others_s = ", ".join(sorted([s.name for s in others])) if others else None
+    return ", ".join([x for x in [important_s, areas_s, bigs_s, others_s, smalls_s] if x])
